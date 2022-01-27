@@ -1,7 +1,7 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql;
 
-use Database\Sql\Exceptions\MissingParameterException;
+use IsThereAnyDeal\Database\Sql\Exceptions\MissingParameterException;
 
 class Params
 {
