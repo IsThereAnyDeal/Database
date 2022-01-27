@@ -6,7 +6,7 @@
     }
   },
   "require": {
-    "ext-pdo": "*"
-    "league/config": "^1.1",
+    "ext-pdo": "*",
+    "league/config": "^1.1"
   }
 }
