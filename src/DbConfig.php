@@ -1,23 +1,10 @@
 <?php
-namespace Database;
+namespace IsThereAnyDeal\Database;
 
-/* JSON Config:
- {
-    "driver": "mysqli",
-    "host": "localhost",
-    "password": <base64 encoded string>,
-    "database": <string>,
-    "user": <string>,
-    "user_custom": <bool>,
-    "user_group": <bool,
-    "user_prefix": <string>,
-    "profiler": <bool>
- }
- */
+use League\Config\Configuration;
+use Nette\Schema\Expect;
 
-use Core\IConfig;
-
-final class DbConfig implements IConfig
+final class DbConfig
 {
     private string $driver;
     private string $host;
@@ -30,7 +17,22 @@ final class DbConfig implements IConfig
     private string $userPrefix;
     private bool $profile;
 
-    public function __construct(array $config) {
+    public static function getSchema(): Configuration {
+        return new Configuration([
+            "driver" => Expect::anyOf("mysqli")->required(),
+            "host" => Expect::string("localhost")->required(),
+            "port" => Expect::int()->required(),
+            "password" => Expect::string()->required(), // base64_encoded
+            "database" => Expect::string()->required(),
+            "user" => Expect::string()->required(),
+            "user_custom" => Expect::bool()->required(),
+            "user_group" => Expect::bool()->required(),
+            "user_prefix" => Expect::string()->required(),
+            "profiler" => Expect::bool()->required(),
+        ]);
+    }
+
+    public function __construct(Configuration $config) {
         $this->driver = $config['driver'];
         $this->host = $config['host'];
         $this->port = $config['port'];

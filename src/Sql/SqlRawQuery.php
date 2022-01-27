@@ -1,7 +1,7 @@
 <?php
 namespace Database\Sql;
 
-use Database\DbDriver;
+use IsThereAnyDeal\Database\DbDriver;
 
 abstract class SqlRawQuery extends SqlQuery {
 

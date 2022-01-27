@@ -1,5 +1,5 @@
 <?php
-namespace Database;
+namespace IsThereAnyDeal\Database;
 
 class DbDriver
 {

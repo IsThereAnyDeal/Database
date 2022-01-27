@@ -1,8 +1,8 @@
 <?php
 namespace Database\Sql;
 
-use Database\DbDriver;
-use Database\Sql\Exceptions\SqlException;
+use IsThereAnyDeal\Database\DbDriver;
+use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
 
 abstract class SqlQuery {
 

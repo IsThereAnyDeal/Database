@@ -1,9 +1,9 @@
 <?php
-namespace Database\Sql;
+namespace IsThereAnyDeal\Database\Sql;
 
-use Database\DbDriver;
-use Database\Sql\Exceptions\MissingParameterException;
-use Database\Sql\Exceptions\SqlException;
+use IsThereAnyDeal\Database\DbDriver;
+use IsThereAnyDeal\Database\Sql\Exceptions\MissingParameterException;
+use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
 
 class SqlUpdateObjectQuery extends SqlQuery {
 

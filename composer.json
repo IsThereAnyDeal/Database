@@ -1,8 +1,12 @@
 {
-	"name": "itad/db",
-	"autoload": {
-		"psr-4": {
-			"IsThereAnyDeal\\Database\\": "src"
-		}
-	}
+  "name": "itad/db",
+  "autoload": {
+    "psr-4": {
+      "IsThereAnyDeal\\Database\\": "src"
+    }
+  },
+  "require": {
+    "ext-pdo": "*"
+    "league/config": "^1.1",
+  }
 }

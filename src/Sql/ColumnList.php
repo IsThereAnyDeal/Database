@@ -1,5 +1,5 @@
 <?php
-namespace Database\Sql;
+namespace IsThereAnyDeal\Database\Sql;
 
 class ColumnList
 {

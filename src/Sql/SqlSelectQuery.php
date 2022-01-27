@@ -1,7 +1,7 @@
 <?php
-namespace Database\Sql;
+namespace IsThereAnyDeal\Database\Sql;
 
-use Database\Sql\Exceptions\SqlException;
+use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
 
 class SqlSelectQuery extends SqlRawQuery {
 

@@ -1,7 +1,7 @@
 <?php
-namespace Database;
+namespace IsThereAnyDeal\Database;
 
-use PDO;
+use \PDO;
 
 class DbFactory {
 
