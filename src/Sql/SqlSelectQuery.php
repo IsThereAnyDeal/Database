@@ -2,15 +2,17 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
+use PDO;
+use stdClass;
 
 class SqlSelectQuery extends SqlRawQuery {
 
     private function bindParams(): void {
         $i = 1;
         foreach($this->params as $param) {
-            $type = \PDO::PARAM_STR;
+            $type = PDO::PARAM_STR;
             if (is_int($param)) {
-                $type = \PDO::PARAM_INT;
+                $type = PDO::PARAM_INT;
             }
             $this->statement->bindValue($i++, $param, $type);
         }
@@ -24,9 +26,9 @@ class SqlSelectQuery extends SqlRawQuery {
      */
     final public function fetch(?string $className=null, ...$constructorArgs): SqlResult {
         if (is_null($className)) {
-            $this->statement->setFetchMode(\PDO::FETCH_OBJ);
+            $this->statement->setFetchMode(PDO::FETCH_OBJ);
         } else {
-            $this->statement->setFetchMode(\PDO::FETCH_CLASS, $className, $constructorArgs);
+            $this->statement->setFetchMode(PDO::FETCH_CLASS, $className, $constructorArgs);
         }
         $this->bindParams();
         $this->execute();
@@ -36,14 +38,14 @@ class SqlSelectQuery extends SqlRawQuery {
 
     /**
      * @param ?string $className
-     * @return ?ISelectable|\stdClass
+     * @return ?ISelectable|stdClass
      * @throws SqlException
      */
     final public function fetchOne(?string $className=null) {
         if (is_null($className)) {
-            $this->statement->setFetchMode(\PDO::FETCH_OBJ);
+            $this->statement->setFetchMode(PDO::FETCH_OBJ);
         } else {
-            $this->statement->setFetchMode(\PDO::FETCH_CLASS, $className);
+            $this->statement->setFetchMode(PDO::FETCH_CLASS, $className);
         }
         $this->bindParams();
         $this->execute();
@@ -52,7 +54,7 @@ class SqlSelectQuery extends SqlRawQuery {
     }
 
     /**
-     * @param ?string $className
+     * @param array|null $params
      * @return mixed
      * @throws SqlException
      */
@@ -60,7 +62,7 @@ class SqlSelectQuery extends SqlRawQuery {
         if (!is_null($params)) {
             $this->params($params);
         }
-        $this->statement->setFetchMode(\PDO::FETCH_NUM);
+        $this->statement->setFetchMode(PDO::FETCH_NUM);
         $this->bindParams();
         $this->execute();
         $result = $this->statement->fetch();
@@ -76,7 +78,7 @@ class SqlSelectQuery extends SqlRawQuery {
         if (!is_null($params)) {
             $this->params($params);
         }
-        $this->statement->setFetchMode(\PDO::FETCH_NUM);
+        $this->statement->setFetchMode(PDO::FETCH_NUM);
         $this->bindParams();
         $this->execute();
 
@@ -88,14 +90,13 @@ class SqlSelectQuery extends SqlRawQuery {
     }
 
     /**
-     * @throws \Database\Sql\Exceptions\MissingParameterException
      * @throws SqlException
      */
     final public function fetchPairs(?array $params=null): array {
         if (!is_null($params)) {
             $this->params($params);
         }
-        $this->statement->setFetchMode(\PDO::FETCH_KEY_PAIR);
+        $this->statement->setFetchMode(PDO::FETCH_KEY_PAIR);
         $this->bindParams();
         $this->execute();
 
@@ -106,6 +107,9 @@ class SqlSelectQuery extends SqlRawQuery {
         return $result;
     }
 
+    /**
+     * @throws SqlException
+     */
     final public function exists(?array $params=null): bool {
         if (!is_null($params)) {
             $this->params($params);
@@ -113,6 +117,9 @@ class SqlSelectQuery extends SqlRawQuery {
         return !is_null($this->fetchOne());
     }
 
+    /**
+     * @throws SqlException
+     */
     final public function notExists(?array $params=null): bool {
         return !$this->exists($params);
     }

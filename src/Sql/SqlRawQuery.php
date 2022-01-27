@@ -24,7 +24,8 @@ abstract class SqlRawQuery extends SqlQuery {
     }
 
     /**
-     * @throws \Database\Sql\Exceptions\MissingParameterException
+     * @param array ...$maps
+     * @return SqlRawQuery
      */
     public function params(array ...$maps): self {
         $params = new Params($this->query, ...$maps);
