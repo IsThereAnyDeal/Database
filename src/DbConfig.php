@@ -1,8 +1,9 @@
 <?php
 namespace IsThereAnyDeal\Database;
 
-use League\Config\Configuration;
 use Nette\Schema\Expect;
+use Nette\Schema\Processor;
+use Nette\Schema\Schema;
 
 final class DbConfig
 {
@@ -17,12 +18,12 @@ final class DbConfig
     private string $userPrefix;
     private bool $profile;
 
-    public static function getSchema(): Configuration {
-        return new Configuration([
+    private function getSchema(): Schema {
+        return Expect::structure([
             "driver" => Expect::anyOf("mysqli")->required(),
             "host" => Expect::string("localhost")->required(),
             "port" => Expect::int()->required(),
-            "password" => Expect::string()->required(), // base64_encoded
+            "password" => Expect::string()->required()->before(fn($v) => base64_decode($v)),
             "database" => Expect::string()->required(),
             "user" => Expect::string()->required(),
             "user_custom" => Expect::bool()->required(),
@@ -32,17 +33,18 @@ final class DbConfig
         ]);
     }
 
-    public function __construct(Configuration $config) {
-        $this->driver = $config['driver'];
-        $this->host = $config['host'];
-        $this->port = $config['port'];
-        $this->password = base64_decode($config['password']);
-        $this->database = $config['database'];
-        $this->defaultUser = $config['user'];
-        $this->useCustomUsers = $config['user_custom'];
-        $this->useUserGroups = $config['user_group'];
-        $this->userPrefix = $config['user_prefix'];
-        $this->profile = $config['profiler'];
+    public function __construct(array $config) {
+        $data = (new Processor())->process($this->getSchema(), $config);
+        $this->driver = $data['driver'];
+        $this->host = $data['host'];
+        $this->port = $data['port'];
+        $this->password = base64_decode($data['password']);
+        $this->database = $data['database'];
+        $this->defaultUser = $data['user'];
+        $this->useCustomUsers = $data['user_custom'];
+        $this->useUserGroups = $data['user_group'];
+        $this->userPrefix = $data['user_prefix'];
+        $this->profile = $data['profiler'];
     }
 
     public function getDriver(): string {

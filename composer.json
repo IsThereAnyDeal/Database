@@ -7,6 +7,6 @@
   },
   "require": {
     "ext-pdo": "*",
-    "league/config": "^1.1"
+    "nette/schema": "^1.2"
   }
 }
