@@ -17,10 +17,9 @@ final class DbConfig
             "password" => Expect::string()->required()->before(fn($v) => base64_decode($v)),
             "database" => Expect::string()->required(),
             "user" => Expect::string()->required(),
-            "user_custom" => Expect::bool()->required(),
-            "user_group" => Expect::bool()->required(),
-            "user_prefix" => Expect::string()->required(),
-            "profiler" => Expect::bool()->required(),
+            "user_custom" => Expect::bool(false),
+            "user_prefix" => Expect::string()->required(false),
+            "profiler" => Expect::bool()->required(false),
         ]);
     }
 
@@ -49,16 +48,12 @@ final class DbConfig
         return $this->config->database;
     }
 
-    public function getDefaultUser(): string {
+    public function getUser(): string {
         return $this->config->user;
     }
 
     public function useCustomUsers(): bool {
         return $this->config->user_custom;
-    }
-
-    public function useUserGroups(): bool {
-        return $this->config->user_group;
     }
 
     public function getUserPrefix(): string {

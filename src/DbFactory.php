@@ -24,7 +24,7 @@ class DbFactory {
         $inst = self::getInstance();
 
         $username = is_null($user) || !$config->useCustomUsers()
-            ? $config->getDefaultUser()
+            ? $config->getUser()
             : $config->getUserPrefix().$user;
 
         if (!isset($inst->connections[$username])) {
