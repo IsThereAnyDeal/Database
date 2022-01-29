@@ -18,8 +18,8 @@ final class DbConfig
             "database" => Expect::string()->required(),
             "user" => Expect::string()->required(),
             "user_custom" => Expect::bool(false),
-            "user_prefix" => Expect::string()->required(false),
-            "profiler" => Expect::bool()->required(false),
+            "user_prefix" => Expect::string(),
+            "profiler" => Expect::bool(false),
         ]);
     }
 
