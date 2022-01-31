@@ -1,6 +1,9 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql;
 
+use ReflectionClass;
+use ReflectionProperty;
+
 abstract class Table
 {
     private string $tableName;
@@ -10,8 +13,27 @@ abstract class Table
         $this->tableName = $name;
         $this->tableAlias = $alias;
 
-        foreach($columns as $c) {
-            $this->{$c} = $this->column($c);
+        if (empty($columns)) {
+            $reflection = new ReflectionClass($this);
+            foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+                $type = $property->getType();
+                $typeName = $type->getName();
+
+                $propertyName = $property->getName();
+
+                if ($typeName === Column::class) {
+                    $this->{$propertyName} = $this->column($propertyName);
+                } elseif (class_exists($typeName)) {
+                    $reflectionProperty = new ReflectionClass($type->getName());
+                    if ($reflectionProperty->isSubclassOf(Column::class)) {
+                        $this->{$propertyName} = $this->column($propertyName);
+                    }
+                }
+            }
+        } else {
+            foreach($columns as $c) {
+                $this->{$c} = $this->column($c);
+            }
         }
     }
 
