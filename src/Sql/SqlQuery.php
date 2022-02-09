@@ -3,6 +3,7 @@ namespace IsThereAnyDeal\Database\Sql;
 
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
+use Psr\Log\LoggerInterface;
 
 abstract class SqlQuery {
 
@@ -10,10 +11,12 @@ abstract class SqlQuery {
     protected \PDOStatement $statement;
 
     private bool $profile;
+    private ?LoggerInterface $logger;
 
     public function __construct(DbDriver $db) {
         $this->db = $db->getDriver();
         $this->profile = $db->isProfile();
+        $this->logger = $db->getLogger();
     }
 
     /**
@@ -21,7 +24,8 @@ abstract class SqlQuery {
      * @throws SqlException
      */
     protected function execute(?array $input=null): void {
-        if ($this->profile) {
+        $profile = $this->profile && !is_null($this->logger);
+        if ($profile) {
             $t = microtime(true);
         }
 
@@ -30,11 +34,11 @@ abstract class SqlQuery {
             throw new SqlException($errorInfo[0].": ".$errorInfo[2]);
         }
 
-        if ($this->profile) {
+        if ($profile) {
             $time = microtime(true) - $t;
             $dump = $this->dump();
             $dump[] = debug_backtrace();
-            \Log::logger("db.profile")->info($time, $dump);
+            $this->logger->info((string)$time, $dump);
         }
     }
 

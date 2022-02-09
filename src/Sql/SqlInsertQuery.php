@@ -2,6 +2,7 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use IsThereAnyDeal\Database\DbDriver;
+use IsThereAnyDeal\Database\Sql\Exceptions\NotSupportedException;
 
 class SqlInsertQuery extends SqlQuery {
 
@@ -11,7 +12,7 @@ class SqlInsertQuery extends SqlQuery {
     private bool $ignore = false;
     protected bool $replace = false;
 
-    /** @var Column[] */
+    /** @var array<Column|array{Column, string}> */
     private array $update = [];
 
     /**
@@ -95,6 +96,10 @@ class SqlInsertQuery extends SqlQuery {
                     array_map(function($c) {
                         if ($c instanceof Column) {
                             return "{$c->getQuerySafeName()}=VALUES({$c->getQuerySafeName()})";
+                        /**
+                         * @phpstan-ignore-next-line This just adds additional safety for future,
+                         * even though right now $c[0] is always Column
+                         */
                         } elseif (is_array($c) && $c[0] instanceof Column) {
                             return "{$c[0]->getQuerySafeName()}={$c[1]}";
                         } else {
@@ -155,8 +160,19 @@ class SqlInsertQuery extends SqlQuery {
         ];
     }
 
+    /**
+     * @throws NotSupportedException
+     */
     public function getInsertedId(): int {
-        return $this->db->lastInsertId();
+        $id = $this->db->lastInsertId();
+        if ($id === false) {
+            return 0;
+        } elseif (is_numeric($id)) {
+            return (int)$id;
+        } else {
+            // right now we only support mysql databases, which return numeric IDs
+            throw new NotSupportedException();
+        }
     }
 
     public function getInsertedRowCount(): int {

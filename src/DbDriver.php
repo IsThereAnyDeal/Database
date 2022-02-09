@@ -1,9 +1,12 @@
 <?php
 namespace IsThereAnyDeal\Database;
 
+use Psr\Log\LoggerInterface;
+
 class DbDriver
 {
     private \PDO $db;
+    private ?LoggerInterface $logger = null;
     private bool $profile = false;
 
     public function __construct(\PDO $db) {
@@ -12,6 +15,14 @@ class DbDriver
 
     public function getDriver(): \PDO {
         return $this->db;
+    }
+
+    public function getLogger(): ?LoggerInterface {
+        return $this->logger;
+    }
+
+    public function setLogger(?LoggerInterface $logger): void {
+        $this->logger = $logger;
     }
 
     public function begin(): bool {

@@ -1,12 +1,18 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql;
 
-class SqlResult implements \IteratorAggregate, \Countable
+use Countable;
+use IteratorAggregate;
+use PDOStatement;
+
+class SqlResult implements IteratorAggregate, Countable
 {
-    private iterable $data;
+    private PDOStatement $data;
+
+    /** @var callable|null $mapper */
     private $mapper = null;
 
-    public function __construct(\PDOStatement $data) {
+    public function __construct(PDOStatement $data) {
         $this->data = $data;
     }
 

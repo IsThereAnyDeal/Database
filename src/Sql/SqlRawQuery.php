@@ -49,7 +49,7 @@ abstract class SqlRawQuery extends SqlQuery {
             $simulation = $this->statement->queryString;
             foreach($this->params as $param) {
                 if (is_int($param) || is_float($param)) {
-                    $simulation = preg_replace("#\?#", $param, $simulation, 1);
+                    $simulation = preg_replace("#\?#", (string)$param, $simulation, 1);
                 } else {
                     $simulation = preg_replace("#\?#", $this->db->quote($param), $simulation, 1);
                 }

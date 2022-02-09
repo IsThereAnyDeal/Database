@@ -37,14 +37,16 @@ class SqlSelectQuery extends SqlRawQuery {
     }
 
     /**
-     * @param ?string $className
-     * @return ?ISelectable|stdClass
+     * @template T
+     * @param ?class-string<T> $className
+     * @return T | stdClass | null
      * @throws SqlException
      */
     final public function fetchOne(?string $className=null) {
         if (is_null($className)) {
             $this->statement->setFetchMode(PDO::FETCH_OBJ);
         } else {
+            /** @phpstan-ignore-next-line This seems like PHPStan bug? */
             $this->statement->setFetchMode(PDO::FETCH_CLASS, $className);
         }
         $this->bindParams();
@@ -70,11 +72,11 @@ class SqlSelectQuery extends SqlRawQuery {
     }
 
     /**
-     * @param ?string $className
-     * @return mixed
+     * @param ?array $params
+     * @return array
      * @throws SqlException
      */
-    final public function fetchValueArray(?array $params=null) {
+    final public function fetchValueArray(?array $params=null): array {
         if (!is_null($params)) {
             $this->params($params);
         }

@@ -2,6 +2,7 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use ReflectionClass;
+use ReflectionNamedType;
 use ReflectionProperty;
 
 abstract class Table
@@ -17,16 +18,19 @@ abstract class Table
             $reflection = new ReflectionClass($this);
             foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
                 $type = $property->getType();
-                $typeName = $type->getName();
 
-                $propertyName = $property->getName();
+                if ($type instanceof ReflectionNamedType) {
+                    $typeName = $type->getName();
 
-                if ($typeName === Column::class) {
-                    $this->{$propertyName} = $this->column($propertyName);
-                } elseif (class_exists($typeName)) {
-                    $reflectionProperty = new ReflectionClass($type->getName());
-                    if ($reflectionProperty->isSubclassOf(Column::class)) {
+                    $propertyName = $property->getName();
+
+                    if ($typeName === Column::class) {
                         $this->{$propertyName} = $this->column($propertyName);
+                    } elseif (class_exists($typeName)) {
+                        $reflectionProperty = new ReflectionClass($typeName);
+                        if ($reflectionProperty->isSubclassOf(Column::class)) {
+                            $this->{$propertyName} = $this->column($propertyName);
+                        }
                     }
                 }
             }
