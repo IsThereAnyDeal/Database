@@ -36,26 +36,41 @@ class SqlInsertQuery extends SqlQuery {
         $this->table = $table;
     }
 
+    /**
+     * @return static
+     */
     final public function stackSize(int $size): self {
         $this->stackSize = $size;
         return $this;
     }
 
+    /**
+     * @return static
+     */
     final public function columns(Column ...$columns): self {
         $this->columns = $columns;
         return $this;
     }
 
+    /**
+     * @return static
+     */
     final public function ignore(bool $value=true): self {
         $this->ignore = $value;
         return $this;
     }
 
+    /**
+     * @return static
+     */
     final public function onDuplicateKeyUpdate(Column ...$columns): self {
         $this->update = array_merge($this->update, $columns);
         return $this;
     }
 
+    /**
+     * @return static
+     */
     final public function onDuplicateKeyExpression(Column $column, string $expression): self {
         $this->update[] = [$column, $expression];
         return $this;
@@ -114,6 +129,9 @@ class SqlInsertQuery extends SqlQuery {
         $this->preparedForCount = $this->currentStacked;
     }
 
+    /**
+     * @return static
+     */
     final public function stack(IInsertable $obj): self {
         foreach($this->columns as $column) {
             $this->data[] = $obj->getDbValue($column);
@@ -126,6 +144,9 @@ class SqlInsertQuery extends SqlQuery {
         return $this;
     }
 
+    /**
+     * @return static
+     */
     final public function persist(?IInsertable $obj=null): self {
         if (count($this->data) == 0 && is_null($obj)) {
             return $this;
