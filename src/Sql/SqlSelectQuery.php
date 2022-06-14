@@ -46,7 +46,6 @@ class SqlSelectQuery extends SqlRawQuery {
         if (is_null($className)) {
             $this->statement->setFetchMode(PDO::FETCH_OBJ);
         } else {
-            /** @phpstan-ignore-next-line This seems like PHPStan bug? */
             $this->statement->setFetchMode(PDO::FETCH_CLASS, $className);
         }
         $this->bindParams();
@@ -102,11 +101,7 @@ class SqlSelectQuery extends SqlRawQuery {
         $this->bindParams();
         $this->execute();
 
-        $result = $this->statement->fetchAll();
-        if ($result === false) {
-            throw new SqlException();
-        }
-        return $result;
+        return $this->statement->fetchAll();
     }
 
     /**
