@@ -16,6 +16,10 @@ class SqlResult implements IteratorAggregate, Countable
         $this->data = $data;
     }
 
+    /**
+     * @param callable(object): mixed $map
+     * @return static
+     */
     public function map(callable $map): self {
         $this->mapper = $map;
         return $this;
@@ -34,44 +38,53 @@ class SqlResult implements IteratorAggregate, Countable
 
     public function toArray(): array {
         $result = [];
-        if (is_null($this->mapper)) {
-            foreach($this->data as $value) {
-                $result[] = $value;
-            }
-        } else {
-            foreach($this->data as $value) {
-                $result[] = call_user_func($this->mapper, $value);
-            }
+        foreach($this->data as $value) {
+            $result[] = is_null($this->mapper)
+                ? $value
+                : call_user_func($this->mapper, $value);
         }
         return $result;
     }
 
+    /**
+     * @param callable(object): array-key $keyGetter
+     * @return array
+     */
     public function toMap(callable $keyGetter): array {
         $result = [];
-        if (is_null($this->mapper)) {
-            foreach($this->data as $value) {
-                $key = call_user_func($keyGetter, $value);
-                $result[$key] = $value;
+        foreach($this->data as $value) {
+            $key = call_user_func($keyGetter, $value);
+            $result[$key] = is_null($this->mapper)
+                ? $value
+                : call_user_func($this->mapper, $value);
+        }
+        return $result;
+    }
+
+    /**
+     * @param callable(object): array-key $groupParamGetter
+     * @return array[][]
+     */
+    public function toGroups(callable $groupParamGetter): array {
+        $result = [];
+        foreach($this->data as $value) {
+            $key = call_user_func($groupParamGetter, $value);
+            if (!isset($result[$key])) {
+                $result[$key] = [];
             }
-        } else {
-            foreach($this->data as $value) {
-                $obj = call_user_func($this->mapper, $value);
-                $key = call_user_func($keyGetter, $value);
-                $result[$key] = $obj;
-            }
+
+            $result[$key][] = is_null($this->mapper)
+                ? $value
+                : call_user_func($this->mapper, $value);
         }
         return $result;
     }
 
     public function getIterator(): iterable {
-        if (is_null($this->mapper)) {
-            foreach($this->data as $value) {
-                yield $value;
-            }
-        } else {
-            foreach($this->data as $value) {
-                yield call_user_func($this->mapper, $value);
-            }
+        foreach($this->data as $value) {
+            yield is_null($this->mapper)
+                ? $value
+                : call_user_func($this->mapper, $value);
         }
     }
 
