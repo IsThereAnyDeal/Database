@@ -19,9 +19,10 @@ class SqlSelectQuery extends SqlRawQuery {
     }
 
     /**
-     * @param ?string $className
+     * @template T
+     * @param class-string<T>|null $className
      * @param mixed ...$constructorArgs
-     * @return SqlResult
+     * @return SqlResult<($className is null ? object : T)>
      * @throws SqlException
      */
     final public function fetch(?string $className=null, ...$constructorArgs): SqlResult {

@@ -4,91 +4,104 @@ namespace IsThereAnyDeal\Database\Sql;
 use Countable;
 use IteratorAggregate;
 use PDOStatement;
+use Traversable;
 
+/**
+ * @template T
+ */
 class SqlResult implements IteratorAggregate, Countable
 {
     private PDOStatement $data;
-
-    /** @var callable|null $mapper */
-    private $mapper = null;
 
     public function __construct(PDOStatement $data) {
         $this->data = $data;
     }
 
     /**
-     * @param callable(object): mixed $map
-     * @return static
+     * @template V
+     * @param null|callable(T): V $mapper
+     * @return V|null
      */
-    public function map(callable $map): self {
-        $this->mapper = $map;
-        return $this;
-    }
-
-    public function getOne() {
+    public function getOne(?callable $mapper=null) {
         $data = $this->data->fetch();
         if ($data === false) {
             return null;
         }
 
-        return is_null($this->mapper)
+        return is_null($mapper)
             ? $data
-            : call_user_func($this->mapper, $data);
+            : call_user_func($mapper, $data);
     }
 
-    public function toArray(): array {
+    /**
+     * @template V
+     * @param null|callable(T): V $mapper
+     * @return array<($mapper is null ? V : T)>
+     */
+    public function toArray(?callable $mapper=null): array {
         $result = [];
         foreach($this->data as $value) {
-            $result[] = is_null($this->mapper)
+            $result[] = is_null($mapper)
                 ? $value
-                : call_user_func($this->mapper, $value);
+                : call_user_func($mapper, $value);
         }
         return $result;
     }
 
     /**
-     * @param callable(object): array-key $keyGetter
-     * @return array
+     * @template K of array-key
+     * @template V
+     * @param callable(T): array{K,V} $mapper
+     * @return array<K, V>
      */
-    public function toMap(callable $keyGetter): array {
+    public function toMap(callable $mapper): array {
         $result = [];
         foreach($this->data as $value) {
-            $key = call_user_func($keyGetter, $value);
-            $result[$key] = is_null($this->mapper)
-                ? $value
-                : call_user_func($this->mapper, $value);
+            list($k, $v) = call_user_func($mapper, $value);
+            $result[$k] = $v;
         }
         return $result;
     }
 
     /**
-     * @param callable(object): array-key $groupParamGetter
-     * @return array[][]
+     * @template K of array-key
+     * @template V
+     * @param callable(T): array{K, V} $mapper
+     * @return array<K, array<V>>
      */
-    public function toGroups(callable $groupParamGetter): array {
+    public function toGroups(callable $mapper): array {
         $result = [];
         foreach($this->data as $value) {
-            $key = call_user_func($groupParamGetter, $value);
-            if (!isset($result[$key])) {
-                $result[$key] = [];
+            list($k, $v) = call_user_func($mapper, $value);
+            if (!isset($result[$k])) {
+                $result[$k] = [];
             }
-
-            $result[$key][] = is_null($this->mapper)
-                ? $value
-                : call_user_func($this->mapper, $value);
+            $result[$k][] = $v;
         }
         return $result;
     }
 
-    public function getIterator(): iterable {
+    /**
+     * @template V
+     * @param null|callable(T): V $mapper
+     * @return Traversable<($mapper is null ? V : T)>
+     */
+    public function iterator(?callable $mapper=null) {
         foreach($this->data as $value) {
-            yield is_null($this->mapper)
+            yield is_null($mapper)
                 ? $value
-                : call_user_func($this->mapper, $value);
+                : call_user_func($mapper, $value);
         }
     }
 
-    public function count() {
+    /** @return Traversable<T> */
+    public function getIterator(): Traversable {
+        foreach($this->data as $value) {
+            yield $value;
+        }
+    }
+
+    public function count(): int {
         // NOT PORTABLE!!
         return $this->data->rowCount();
     }
