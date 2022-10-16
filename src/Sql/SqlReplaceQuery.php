@@ -2,6 +2,7 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use IsThereAnyDeal\Database\DbDriver;
+use IsThereAnyDeal\Database\Sql\Tables\Table;
 
 class SqlReplaceQuery extends SqlInsertQuery {
 

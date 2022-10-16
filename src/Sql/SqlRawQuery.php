@@ -6,6 +6,8 @@ use IsThereAnyDeal\Database\DbDriver;
 abstract class SqlRawQuery extends SqlQuery {
 
     private string $query;
+
+    /** @var array<string> */
     private array $keys = [];
 
     protected array $params = [];

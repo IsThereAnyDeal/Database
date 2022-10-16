@@ -1,8 +1,9 @@
 <?php
-namespace IsThereAnyDeal\Database\Sql;
+namespace IsThereAnyDeal\Database\Sql\Tables;
 
 class ColumnList
 {
+    /** @var array<Column> */
     private array $columns;
 
     public function __construct(Column ...$columns) {
@@ -13,6 +14,9 @@ class ColumnList
         $this->columns[] = $column;
     }
 
+    /**
+     * @return array<Column>
+     */
     public function toArray(): array {
         return $this->columns;
     }

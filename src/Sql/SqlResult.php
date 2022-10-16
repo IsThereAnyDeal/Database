@@ -8,6 +8,7 @@ use Traversable;
 
 /**
  * @template T
+ * @implements IteratorAggregate<T>
  */
 class SqlResult implements IteratorAggregate, Countable
 {

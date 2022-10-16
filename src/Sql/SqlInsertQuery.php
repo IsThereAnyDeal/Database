@@ -3,6 +3,8 @@ namespace IsThereAnyDeal\Database\Sql;
 
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Sql\Exceptions\NotSupportedException;
+use IsThereAnyDeal\Database\Sql\Tables\Column;
+use IsThereAnyDeal\Database\Sql\Tables\Table;
 
 class SqlInsertQuery extends SqlQuery {
 
@@ -94,7 +96,7 @@ class SqlInsertQuery extends SqlQuery {
 
         $ignore = "";
         $update = "";
-        $columns = implode(",", array_map(fn($column) => $column->getQuerySafeName(), $this->columns));
+        $columns = implode(",", array_map(fn($column) => "`{$column->name}`", $this->columns));
         $values = $this->getValuesTemplate($this->currentStacked);
 
         $action = $this->replace
@@ -110,13 +112,13 @@ class SqlInsertQuery extends SqlQuery {
                 .implode(", ",
                     array_map(function($c) {
                         if ($c instanceof Column) {
-                            return "{$c->getQuerySafeName()}=VALUES({$c->getQuerySafeName()})";
+                            return "`{$c->name}`=VALUES(`{$c->name}`)";
                         /**
                          * @phpstan-ignore-next-line This just adds additional safety for future,
                          * even though right now $c[0] is always Column
                          */
                         } elseif (is_array($c) && $c[0] instanceof Column) {
-                            return "{$c[0]->getQuerySafeName()}={$c[1]}";
+                            return "`{$c[0]->name}`={$c[1]}";
                         } else {
                             throw new \InvalidArgumentException();
                         }
@@ -124,7 +126,7 @@ class SqlInsertQuery extends SqlQuery {
                 );
         }
 
-        $query = "{$action} {$ignore} INTO {$this->table->getName()} ({$columns}) VALUES {$values} {$update}";
+        $query = "{$action} {$ignore} INTO {$this->table->name} ({$columns}) VALUES {$values} {$update}";
         $this->statement = $this->db->prepare($query);
         $this->preparedForCount = $this->currentStacked;
     }

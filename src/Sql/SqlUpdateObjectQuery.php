@@ -4,6 +4,8 @@ namespace IsThereAnyDeal\Database\Sql;
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Sql\Exceptions\MissingParameterException;
 use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
+use IsThereAnyDeal\Database\Sql\Tables\Column;
+use IsThereAnyDeal\Database\Sql\Tables\Table;
 
 class SqlUpdateObjectQuery extends SqlQuery {
 
@@ -50,9 +52,9 @@ class SqlUpdateObjectQuery extends SqlQuery {
     }
 
     private function prepare(): void {
-        $columns = implode(", ", array_map(fn($column) => $column->getQuerySafeName()."=?", $this->columns));
+        $columns = implode(", ", array_map(fn($column) => "`{$column->name}`=?", $this->columns));
 
-        $query = "UPDATE {$this->table->getName()}
+        $query = "UPDATE {$this->table->name}
                   SET $columns
                   WHERE $this->whereSql";
 
@@ -69,7 +71,7 @@ class SqlUpdateObjectQuery extends SqlQuery {
             $sql = [];
             $this->whereParams = [];
             foreach($this->whereColumns as $column) {
-                $sql[] = "{$column->getQuerySafeName()}=?";
+                $sql[] = "`{$column->name}`=?";
                 $this->whereParams[] = $obj->getDbValue($column);
             }
             $this->whereSql = implode(" AND ", $sql);
