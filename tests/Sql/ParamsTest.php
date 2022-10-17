@@ -1,6 +1,7 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql;
 
+use IsThereAnyDeal\Database\Sql\Exceptions\InvalidValueCountException;
 use PHPUnit\Framework\TestCase;
 use IsThereAnyDeal\Database\Sql\Exceptions\MissingParameterException;
 
@@ -44,6 +45,32 @@ class ParamsTest extends TestCase
         $this->assertEquals([5], $params->getCounts());
     }
 
+    public function testTuplesParam(): void {
+        $params = new Params("WHERE (column_a, column_b) IN :param(2)", [
+            ":param" => [
+                "a", 1,
+                "b", 2,
+                "c", 3,
+                "d", 4
+            ],
+        ]);
+
+        $this->assertEquals("WHERE (column_a, column_b) IN ((?,?),(?,?),(?,?),(?,?))", $params->getQuery());
+        $this->assertEquals(["a", 1, "b", 2, "c", 3, "d", 4], $params->getParams());
+        $this->assertEquals([8], $params->getCounts());
+    }
+
+    public function testInvalidValueCount(): void {
+        $this->expectException(InvalidValueCountException::class);
+
+        new Params("WHERE (column_a, column_b) IN :param(2)", [
+            ":param" => [
+                "a", 1,
+                "b"
+            ],
+        ]);
+    }
+
     public function testMissingParam(): void {
         $this->expectException(MissingParameterException::class);
 
@@ -74,6 +101,4 @@ class ParamsTest extends TestCase
         $this->assertEquals(["v1", "v2", "v3"], $params->getParams());
         $this->assertEquals([1, 1, 1], $params->getCounts());
     }
-
-
 }
