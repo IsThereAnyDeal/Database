@@ -7,7 +7,7 @@ use PDOStatement;
 use Traversable;
 
 /**
- * @template T
+ * @template T of object
  * @implements IteratorAggregate<T>
  */
 class SqlResult implements IteratorAggregate, Countable
@@ -21,30 +21,42 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template V
      * @param null|callable(T): V $mapper
-     * @return V|null
+     * @param T $data
+     * @return T|V
      */
-    public function getOne(?callable $mapper=null) {
-        $data = $this->data->fetch();
-        if ($data === false) {
-            return null;
+    private function getMappedValue(?callable $mapper=null, mixed $data): mixed {
+        if (is_null($mapper)) {
+            return $data;
         }
 
-        return is_null($mapper)
-            ? $data
-            : call_user_func($mapper, $data);
+        return call_user_func($mapper, $data); // @phpstan-ignore-line
     }
 
     /**
      * @template V
      * @param null|callable(T): V $mapper
-     * @return array<($mapper is null ? V : T)>
+     * @return null|T|V
+     */
+    public function getOne(?callable $mapper=null) {
+        /** @var T|false $data */
+        $data = $this->data->fetch();
+        if ($data === false) {
+            return null;
+        }
+
+        return $this->getMappedValue($mapper, $data);
+    }
+
+    /**
+     * @template V
+     * @param null|callable(T): V $mapper
+     * @return array<T|V>
      */
     public function toArray(?callable $mapper=null): array {
         $result = [];
+        /** @var T $value */
         foreach($this->data as $value) {
-            $result[] = is_null($mapper)
-                ? $value
-                : call_user_func($mapper, $value);
+            $result[] = $this->getMappedValue($mapper, $value);
         }
         return $result;
     }
@@ -58,7 +70,11 @@ class SqlResult implements IteratorAggregate, Countable
     public function toMap(callable $mapper): array {
         $result = [];
         foreach($this->data as $value) {
-            list($k, $v) = call_user_func($mapper, $value);
+            /**
+             * @var K $k
+             * @var V $v
+             */
+            list($k, $v) = call_user_func($mapper, $value); // @phpstan-ignore-line
             $result[$k] = $v;
         }
         return $result;
@@ -73,10 +89,11 @@ class SqlResult implements IteratorAggregate, Countable
     public function toGroups(callable $mapper): array {
         $result = [];
         foreach($this->data as $value) {
-            list($k, $v) = call_user_func($mapper, $value);
-            if (!isset($result[$k])) {
-                $result[$k] = [];
-            }
+            /**
+             * @var K $k
+             * @var V $v
+             */
+            list($k, $v) = call_user_func($mapper, $value); // @phpstan-ignore-line
             $result[$k][] = $v;
         }
         return $result;
@@ -85,18 +102,18 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template V
      * @param null|callable(T): V $mapper
-     * @return Traversable<($mapper is null ? V : T)>
+     * @return Traversable<T|V>
      */
     public function iterator(?callable $mapper=null) {
+        /** @var T $value */
         foreach($this->data as $value) {
-            yield is_null($mapper)
-                ? $value
-                : call_user_func($mapper, $value);
+            yield $this->getMappedValue($mapper, $value);
         }
     }
 
     /** @return Traversable<T> */
     public function getIterator(): Traversable {
+        /** @var T $value */
         foreach($this->data as $value) {
             yield $value;
         }
