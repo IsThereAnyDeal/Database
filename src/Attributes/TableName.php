@@ -1,5 +1,5 @@
 <?php
-namespace IsThereAnyDeal\Database\Sql\Attributes;
+namespace IsThereAnyDeal\Database\Attributes;
 
 use Attribute;
 

@@ -1,8 +1,8 @@
 <?php
 namespace IsThereAnyDeal\Database\TestObjects;
 
-use IsThereAnyDeal\Database\Sql\Attributes\TableColumn;
-use IsThereAnyDeal\Database\Sql\Attributes\TableName;
+use IsThereAnyDeal\Database\Attributes\TableColumn;
+use IsThereAnyDeal\Database\Attributes\TableName;
 use IsThereAnyDeal\Database\Sql\Tables\Column;
 use IsThereAnyDeal\Database\Sql\Tables\Table;
 

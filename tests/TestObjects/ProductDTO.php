@@ -3,15 +3,15 @@
 namespace IsThereAnyDeal\Database\TestObjects;
 
 use IsThereAnyDeal\Database\Sql\AInsertableObject;
-use IsThereAnyDeal\Database\Sql\Attributes\ColumnSetup;
+use IsThereAnyDeal\Database\Attributes\Column;
 
 class ProductDTO extends AInsertableObject
 {
     private string $name;
 
     #[
-        ColumnSetup("price", serializer: [PriceSerializer::class, "serializePrice"]),
-        ColumnSetup("currency", serializer: [PriceSerializer::class, "serializeCurrency"])
+        Column("price", serializer: [PriceSerializer::class, "serializePrice"]),
+        Column("currency", serializer: [PriceSerializer::class, "serializeCurrency"])
     ]
     private Price $price;
 
