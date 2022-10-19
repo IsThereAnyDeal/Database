@@ -1,5 +1,4 @@
 <?php
-
 namespace IsThereAnyDeal\Database\TestObjects;
 
 use IsThereAnyDeal\Database\Sql\AInsertableObject;

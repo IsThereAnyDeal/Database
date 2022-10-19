@@ -2,6 +2,8 @@
 namespace IsThereAnyDeal\Database\Sql\Queries;
 
 use IsThereAnyDeal\Database\Attributes\Column;
+use IsThereAnyDeal\Database\Attributes\Construction;
+use IsThereAnyDeal\Database\Enums\EConstructionType;
 use IsThereAnyDeal\Database\Sql\Data\ObjectBuilder;
 use IsThereAnyDeal\Database\TestObjects\Currency;
 use IsThereAnyDeal\Database\TestObjects\Price;
@@ -36,10 +38,16 @@ class EnumSerializer {
 
 class SimpleSerializedDTO {
     #[Column("type", deserializer: [EType::class, "from"])]
-    public readonly EType $type;
+    public EType $type;
 
     #[Column(deserializer: [EnumSerializer::class, "ESizeFromDbValue"])]
-    public readonly ESize $size;
+    public ESize $size;
+
+    public function __construct() {
+        if (!isset($this->size)) {
+            $this->size = ESize::Size10;
+        }
+    }
 }
 
 class PriceSerializer {
@@ -52,17 +60,71 @@ class PriceSerializer {
     }
 }
 
+#[Construction(EConstructionType::AfterFetch)]
 class ComplexSerializedDTO {
     #[Column(["price", "currency"],
         deserializer: [PriceSerializer::class, "fromDbValue"])]
-    public readonly Price $price;
+    public Price $price;
 
     #[Column("price")]
-    public readonly int $priceAmount;
+    public int $priceAmount;
 
     #[Column(["sale", "currency"],
         deserializer: [PriceSerializer::class, "fromDbValue"])]
-    public readonly Price $sale;
+    public Price $sale;
+
+    public readonly int $cut;
+
+    public function __construct(?int $customRate = null, ?Currency $currency=null) {
+        if (!is_null($customRate)) {
+            if (isset($this->price)) {
+                $this->price->amount *= $customRate;
+            }
+
+            if (isset($this->priceAmount)) {
+                $this->priceAmount *= $customRate;
+            }
+
+            if (isset($this->sale)) {
+                $this->sale->amount *= $customRate;
+            }
+        }
+
+        if (!is_null($currency)) {
+            if (isset($this->price)) {
+                $this->price->currency = $currency;
+            }
+            if (isset($this->sale)) {
+                $this->sale->currency = $currency;
+            }
+        }
+
+        if (isset($this->price) && isset($this->sale)) {
+            $this->cut = 100 - round($this->sale->amount / ($this->price->amount/100));
+        }
+    }
+}
+
+#[Construction(EConstructionType::None)]
+class NoConstructorDTO {
+
+    public int $id;
+    public ?int $time = null;
+
+    public function __construct() {
+        $this->time = time();
+    }
+}
+
+#[Construction(EConstructionType::BeforeFetch)]
+class PreFetchConstructorDTO {
+
+    public int $id;
+    public ?int $time = null;
+
+    public function __construct() {
+        $this->time = time();
+    }
 }
 
 class ObjectBuilderTest extends TestCase
@@ -107,7 +169,6 @@ class ObjectBuilderTest extends TestCase
         }
     }
 
-
     public function testSimpleDeserializetion(): void {
 
         $data = [
@@ -146,5 +207,93 @@ class ObjectBuilderTest extends TestCase
             $this->assertFalse(isset($item->sale));
             ++$i;
         }
+    }
+
+    public function testPreFetchConstructor(): void {
+        $data = [
+            (object)["id" => 3348, "time" => null]
+        ];
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(PreFetchConstructorDTO::class, $data);
+
+        $item = $items->current();
+        $this->assertEquals(3348, $item->id);
+        $this->assertNull($item->time);
+    }
+
+    public function testPostFetchConstructor(): void {
+
+        $data = [
+            (object)["price" => 4000, "sale" => 1000, "currency" => "USD"],
+            (object)["price" => 5000, "sale" =>  500, "currency" => "USD"],
+        ];
+
+        $expected = [
+            75,
+            90
+        ];
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(ComplexSerializedDTO::class, $data);
+
+        $i = 0;
+        foreach($items as $item) {
+            $this->assertEquals($expected[$i], $item->cut);
+            ++$i;
+        }
+    }
+
+    public function testNoConstructor(): void {
+
+        $data = [
+            (object)["id" => 138]
+        ];
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(NoConstructorDTO::class, $data);
+
+        $item = $items->current();
+        $this->assertEquals(138, $item->id);
+        $this->assertNull($item->time);
+    }
+
+    public function testDefaultConstructor(): void {
+
+        $data = [
+            (object)["type" => 2],
+            (object)["type" => 1],
+        ];
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(SimpleSerializedDTO::class, $data);
+
+        $i = 0;
+        foreach($items as $item) {
+            $this->assertInstanceOf(SimpleSerializedDTO::class, $item);
+            $this->assertEquals(EType::from($data[$i]->type), $item->type);
+            $this->assertEquals(ESize::Size10, $item->size);
+            ++$i;
+        }
+    }
+
+    public function testConstructorParams(): void {
+
+        $data = [
+            (object)["sale" => 1000, "currency" => "USD"],
+        ];
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(ComplexSerializedDTO::class, $data, 10);
+
+        $item = $items->current();
+        $this->assertEquals(10000, $item->sale->amount);
+        $this->assertEquals("USD", $item->sale->currency->code);
+
+        $items = $builder->build(ComplexSerializedDTO::class, $data, 2, new Currency("EUR"));
+
+        $item = $items->current();
+        $this->assertEquals(2000, $item->sale->amount);
+        $this->assertEquals("EUR", $item->sale->currency->code);
     }
 }

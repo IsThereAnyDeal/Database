@@ -8,7 +8,7 @@ class SubQuery
 
     /**
      * @param string $query
-     * @param array<mixed> $params
+     * @param array $params
      */
     public function __construct(string $query="", array $params=[]) {
         $this->query = $query;

@@ -4,7 +4,7 @@ namespace IsThereAnyDeal\Database\TestObjects;
 class Price
 {
     public function __construct(
-        public readonly int $amount,
-        public readonly Currency $currency
+        public int $amount,
+        public Currency $currency
     ) {}
 }

@@ -4,7 +4,7 @@ namespace IsThereAnyDeal\Database\Sql\Data;
 
 use ReflectionProperty;
 
-class SColumnProperty
+class SColumnDescriptor
 {
     /**
      * @param ReflectionProperty $property

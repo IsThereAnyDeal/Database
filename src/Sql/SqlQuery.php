@@ -38,7 +38,7 @@ abstract class SqlQuery {
             $time = microtime(true) - $t;
             $dump = $this->dump();
             $dump[] = debug_backtrace();
-            $this->logger->info((string)$time, $dump);
+            $this->logger?->info((string)$time, $dump);
         }
     }
 

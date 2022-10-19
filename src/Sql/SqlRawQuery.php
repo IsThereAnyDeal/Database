@@ -26,7 +26,7 @@ abstract class SqlRawQuery extends SqlQuery {
     }
 
     /**
-     * @param array ...$maps
+     * @param array<string, scalar|scalar[]> ...$maps
      * @return static
      * @throws Exceptions\MissingParameterException
      */

@@ -5,25 +5,41 @@ use Ds\Map;
 use Ds\Set;
 use Generator;
 use IsThereAnyDeal\Database\Attributes\Column;
+use IsThereAnyDeal\Database\Attributes\Construction;
+use IsThereAnyDeal\Database\Enums\EConstructionType;
+use IsThereAnyDeal\Database\Sql\Exceptions\InvalidDeserializerException;
 use ReflectionClass;
 use ReflectionException;
 
 class ObjectBuilder
 {
-    /** @var Map<array{ReflectionClass, array<SColumnProperty>}>*/
+    private const DefaultConstructionType = EConstructionType::AfterFetch;
+
+    /** @var Map<class-string, SClassDescriptor>*/
     private readonly Map $cache;
+
+    private bool $enableCaching = false;
 
     public function __construct() {
         $this->cache = new Map();
     }
 
+    public function toggleCaching(bool $enable): self {
+        $this->enableCaching = $enable;
+
+        if (!$enable) {
+            $this->cache->clear();
+        }
+        return $this;
+    }
+
     /**
      * @template T of object
      * @param class-string<T> $className
-     * @return array<array{ReflectionClass, array<SColumnProperty>}>
+     * @return SClassDescriptor
      * @throws ReflectionException
      */
-    private function parseClass(string $className): array {
+    private function parseClass(string $className): SClassDescriptor {
 
         if ($this->cache->hasKey($className)) {
             return $this->cache->get($className);
@@ -50,25 +66,37 @@ class ObjectBuilder
                 $deserializer = $column->deserializer;
 
                 if (is_array($dbColumName) && !is_callable($deserializer)) {
-                    // throw new
+                    throw new InvalidDeserializerException();
                 }
             }
 
-            $properties[] = new SColumnProperty(
+            $properties[] = new SColumnDescriptor(
                 $property,
                 $dbColumName ?? $property->getName(),
                 $deserializer
             );
         }
 
-        $result = [$class, $properties];
+        /** @var array<\ReflectionAttribute<Construction>> $ctorAttributes */
+        $ctorAttributes = $class->getAttributes(Construction::class);
+        $constructionType = empty($ctorAttributes)
+            ? self::DefaultConstructionType
+            : $ctorAttributes[0]->newInstance()->type;
 
-        $this->cache->put($className, $result);
+        $result = new SClassDescriptor(
+            $class,
+            $constructionType,
+            $properties
+        );
+
+        if ($this->enableCaching) {
+            $this->cache->put($className, $result);
+        }
         return $result;
     }
 
     /**
-     * @param array<SColumnProperty> $properties
+     * @param array<SColumnDescriptor> $properties
      * @param Set<string> $dataset
      * @return array<SColumnRecipe>
      */
@@ -109,22 +137,41 @@ class ObjectBuilder
      * @template T of object
      * @param class-string<T> $className
      * @param iterable<object> $data
+     * @param array ...$constructorParams
      * @return Generator<T>
      * @throws ReflectionException
      */
-    public function build(string $className, iterable $data): iterable {
-        list($class, $properties) = $this->parseClass($className);
+    public function build(string $className, iterable $data, mixed ...$constructorParams): iterable {
+        /**
+         * @var ReflectionClass $class
+         * @var array<SColumnDescriptor> $properties
+         */
+        $classDescriptor = $this->parseClass($className);
+        $class = $classDescriptor->class;
+        $constructionType = $classDescriptor->construction;
+        $properties = $classDescriptor->columns;
+
         $dataset = new Set(array_keys(get_object_vars(current($data))));
 
         $recipe = $this->getRecipe($properties, $dataset);
 
         foreach($data as $row) {
             $instance = $class->newInstanceWithoutConstructor();
+
+            if ($constructionType == EConstructionType::BeforeFetch) {
+                $class->getConstructor()?->invokeArgs($instance, $constructorParams);
+            }
+
             foreach($recipe as $item) {
                 $item->property->setValue($instance, is_string($item->setter)
                     ? $row->{$item->setter}
                     : call_user_func($item->setter, $row));
             }
+
+            if ($constructionType == EConstructionType::AfterFetch) {
+                $class->getConstructor()?->invokeArgs($instance, $constructorParams);
+            }
+
             yield $instance;
         }
     }
