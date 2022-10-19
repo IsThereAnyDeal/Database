@@ -126,7 +126,7 @@ class SqlInsertQuery extends SqlQuery {
                 );
         }
 
-        $query = "{$action} {$ignore} INTO {$this->table->name} ({$columns}) VALUES {$values} {$update}";
+        $query = "{$action} {$ignore} INTO {$this->table->getName()} ({$columns}) VALUES {$values} {$update}";
         $this->statement = $this->db->prepare($query);
         $this->preparedForCount = $this->currentStacked;
     }

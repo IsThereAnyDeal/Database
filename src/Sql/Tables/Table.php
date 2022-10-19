@@ -1,8 +1,8 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql\Tables;
 
-use IsThereAnyDeal\Database\Sql\Attributes\TableColumn;
-use IsThereAnyDeal\Database\Sql\Attributes\TableName;
+use IsThereAnyDeal\Database\Attributes\TableColumn;
+use IsThereAnyDeal\Database\Attributes\TableName;
 use IsThereAnyDeal\Database\Sql\Exceptions\InvalidSetupException;
 use ReflectionClass;
 use ReflectionNamedType;
@@ -10,8 +10,8 @@ use ReflectionProperty;
 
 abstract class Table
 {
-    public readonly string $name;
-    private readonly string $alias;
+    private readonly string $tbl_name;
+    private readonly string $tbl_alias;
 
     public function __construct() {
         $reflection = new ReflectionClass($this);
@@ -20,8 +20,8 @@ abstract class Table
             throw new InvalidSetupException();
         }
 
-        $this->name = $tableName[0]->newInstance()->name;
-        $this->alias = AliasFactory::getAlias();
+        $this->tbl_name = $tableName[0]->newInstance()->name;
+        $this->tbl_alias = AliasFactory::getAlias();
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             $type = $property->getType();
@@ -38,11 +38,15 @@ abstract class Table
 
                     $property->setValue(
                         $this,
-                        new Column($this->alias, $columnName ?? $propertyName)
+                        new Column($this->tbl_alias, $columnName ?? $propertyName)
                     );
                 }
             }
         }
+    }
+
+    public function getName(): string {
+        return $this->tbl_name;
     }
 
     private function isColumnType(string $typeName): bool {
@@ -58,7 +62,7 @@ abstract class Table
     }
 
     final public function __toString(): string {
-        return $this->name
-            .(empty($this->alias) ? "" : " as `{$this->alias}`");
+        return $this->tbl_name
+            .(empty($this->tbl_alias) ? "" : " as `{$this->tbl_alias}`");
     }
 }

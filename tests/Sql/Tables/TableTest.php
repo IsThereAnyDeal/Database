@@ -1,8 +1,8 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql\Tables;
 
+use IsThereAnyDeal\Database\TestObjects\ProductTable;
 use IsThereAnyDeal\Database\TestObjects\TableA;
-use IsThereAnyDeal\Database\TestObjects\TableB;
 use PHPUnit\Framework\TestCase;
 
 class TableTest extends TestCase
@@ -16,7 +16,7 @@ class TableTest extends TestCase
     public function testConstruction(): void {
 
         $a1 = new TableA();
-        $this->assertEquals("tbl_a", $a1->name);
+        $this->assertEquals("tbl_a", $a1->getName());
         $this->assertEquals("t1.`column1`", (string)$a1->a);
         $this->assertEquals("t1.`column1`", $a1->a->fqn);
         $this->assertEquals("column1", $a1->a->name);
@@ -34,7 +34,7 @@ class TableTest extends TestCase
         $a2 = new TableA();
         $this->assertEquals("tbl_a as `t2`", (string)$a2);
 
-        $b = new TableB();
-        $this->assertEquals("tbl_b as `t3`", (string)$b);
+        $b = new ProductTable();
+        $this->assertEquals("product as `t3`", (string)$b);
     }
 }

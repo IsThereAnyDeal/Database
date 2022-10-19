@@ -54,7 +54,7 @@ class SqlUpdateObjectQuery extends SqlQuery {
     private function prepare(): void {
         $columns = implode(", ", array_map(fn($column) => "`{$column->name}`=?", $this->columns));
 
-        $query = "UPDATE {$this->table->name}
+        $query = "UPDATE {$this->table->getName()}
                   SET $columns
                   WHERE $this->whereSql";
 
