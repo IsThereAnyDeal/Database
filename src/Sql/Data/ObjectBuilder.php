@@ -35,17 +35,17 @@ class ObjectBuilder
 
     /**
      * @template T of object
-     * @param class-string<T> $className
+     * @param class-string<T>|T $classOrObject
      * @return SClassDescriptor
      * @throws ReflectionException
      */
-    private function parseClass(string $className): SClassDescriptor {
+    private function parseClass($classOrObject): SClassDescriptor {
 
-        if ($this->cache->hasKey($className)) {
-            return $this->cache->get($className);
+        if (!is_object($classOrObject) && $this->cache->hasKey($classOrObject)) {
+            return $this->cache->get($classOrObject);
         }
 
-        $class = new ReflectionClass($className);
+        $class = new ReflectionClass($classOrObject);
 
         $properties = [];
         foreach($class->getProperties() as $property) {
@@ -64,10 +64,6 @@ class ObjectBuilder
                 $column = $attribute->newInstance();
                 $dbColumName = $column->name;
                 $deserializer = $column->deserializer;
-
-                if (is_array($dbColumName) && !is_callable($deserializer)) {
-                    throw new InvalidDeserializerException();
-                }
             }
 
             $properties[] = new SColumnDescriptor(
@@ -89,8 +85,8 @@ class ObjectBuilder
             $properties
         );
 
-        if ($this->enableCaching) {
-            $this->cache->put($className, $result);
+        if ($this->enableCaching && !is_object($classOrObject)) {
+            $this->cache->put($classOrObject, $result);
         }
         return $result;
     }
@@ -135,23 +131,28 @@ class ObjectBuilder
 
     /**
      * @template T of object
-     * @param class-string<T> $className
+     * @param class-string<T>|T $classOrObject
      * @param iterable<object> $data
-     * @param array ...$constructorParams
+     * @param array<mixed> ...$constructorParams
      * @return Generator<T>
      * @throws ReflectionException
      */
-    public function build(string $className, iterable $data, mixed ...$constructorParams): iterable {
-        /**
-         * @var ReflectionClass $class
-         * @var array<SColumnDescriptor> $properties
-         */
-        $classDescriptor = $this->parseClass($className);
-        $class = $classDescriptor->class;
-        $constructionType = $classDescriptor->construction;
-        $properties = $classDescriptor->columns;
+    public function build(string|object $classOrObject, iterable $data, mixed ...$constructorParams): iterable {
+        $classDescriptor = $this->parseClass($classOrObject);
 
-        $dataset = new Set(array_keys(get_object_vars(current($data))));
+        /** @var ReflectionClass<T> $class */
+        $class = $classDescriptor->class;
+
+        /** @var array<SColumnDescriptor> $properties */
+        $properties = $classDescriptor->columns;
+        $constructionType = $classDescriptor->construction;
+
+        $current = current($data);
+        if (empty($current)) {
+            return;
+        }
+
+        $dataset = new Set(array_keys(get_object_vars($current)));
 
         $recipe = $this->getRecipe($properties, $dataset);
 

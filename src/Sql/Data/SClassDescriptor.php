@@ -8,7 +8,8 @@ use ReflectionClass;
 class SClassDescriptor
 {
     /**
-     * @param ReflectionClass $class
+     * @template T of object
+     * @param ReflectionClass<T> $class
      * @param EConstructionType $construction
      * @param array<SColumnDescriptor> $columns
      */

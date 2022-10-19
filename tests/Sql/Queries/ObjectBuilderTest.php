@@ -129,7 +129,6 @@ class PreFetchConstructorDTO {
 
 class ObjectBuilderTest extends TestCase
 {
-
     public function testSimpleBuild(): void {
 
         $data = [
@@ -295,5 +294,29 @@ class ObjectBuilderTest extends TestCase
         $item = $items->current();
         $this->assertEquals(2000, $item->sale->amount);
         $this->assertEquals("EUR", $item->sale->currency->code);
+    }
+
+    public function testAnonymousClassConstruction(): void {
+
+        $data = [
+            (object)["product_id" => 1, "size" => "10"],
+            (object)["product_id" => 3, "size" => "20"]
+        ];
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(new class {
+            #[Column("product_id")]
+            public int $id;
+
+            #[Column(deserializer: [ESize::class, "from"])]
+            public ESize $size;
+        }, $data);
+
+        $i = 0;
+        foreach($items as $item) {
+            $this->assertEquals($data[$i]->product_id, $item->id);
+            $this->assertEquals(ESize::from($data[$i]->size), $item->size);
+            ++$i;
+        }
     }
 }

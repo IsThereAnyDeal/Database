@@ -8,7 +8,7 @@ class SColumnRecipe
 {
     /**
      * @param ReflectionProperty $property
-     * @param callable(object): mixed $setter
+     * @param string|callable(object): mixed $setter
      */
     public function __construct(
         public readonly ReflectionProperty $property,
