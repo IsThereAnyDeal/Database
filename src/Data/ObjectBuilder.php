@@ -1,5 +1,5 @@
 <?php
-namespace IsThereAnyDeal\Database\Sql\Data;
+namespace IsThereAnyDeal\Database\Data;
 
 use Ds\Map;
 use Ds\Set;
@@ -7,7 +7,6 @@ use Generator;
 use IsThereAnyDeal\Database\Attributes\Column;
 use IsThereAnyDeal\Database\Attributes\Construction;
 use IsThereAnyDeal\Database\Enums\EConstructionType;
-use IsThereAnyDeal\Database\Sql\Exceptions\InvalidDeserializerException;
 use ReflectionClass;
 use ReflectionException;
 

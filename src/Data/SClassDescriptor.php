@@ -1,6 +1,6 @@
 <?php
 
-namespace IsThereAnyDeal\Database\Sql\Data;
+namespace IsThereAnyDeal\Database\Data;
 
 use IsThereAnyDeal\Database\Enums\EConstructionType;
 use ReflectionClass;

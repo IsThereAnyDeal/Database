@@ -4,7 +4,7 @@ namespace IsThereAnyDeal\Database\Sql\Queries;
 use IsThereAnyDeal\Database\Attributes\Column;
 use IsThereAnyDeal\Database\Attributes\Construction;
 use IsThereAnyDeal\Database\Enums\EConstructionType;
-use IsThereAnyDeal\Database\Sql\Data\ObjectBuilder;
+use IsThereAnyDeal\Database\Data\ObjectBuilder;
 use IsThereAnyDeal\Database\TestObjects\Currency;
 use IsThereAnyDeal\Database\TestObjects\Price;
 use PHPUnit\Framework\TestCase;
