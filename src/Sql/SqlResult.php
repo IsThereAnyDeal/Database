@@ -3,7 +3,6 @@ namespace IsThereAnyDeal\Database\Sql;
 
 use Countable;
 use IteratorAggregate;
-use PDOStatement;
 use Traversable;
 
 /**
@@ -12,19 +11,22 @@ use Traversable;
  */
 class SqlResult implements IteratorAggregate, Countable
 {
-    private PDOStatement $data;
-
-    public function __construct(PDOStatement $data) {
-        $this->data = $data;
-    }
+    /**
+     * @param Traversable<T> $data
+     * @param int $count
+     */
+    public function __construct(
+        private readonly Traversable $data,
+        private readonly int         $count
+    ) {}
 
     /**
-     * @template V
-     * @param null|callable(T): V $mapper
+     * @template TMapped
      * @param T $data
-     * @return T|V
+     * @param null|callable(T): TMapped $mapper
+     * @return T|TMapped
      */
-    private function getMappedValue(?callable $mapper=null, mixed $data): mixed {
+    private function getMappedValue(mixed $data, ?callable $mapper=null): mixed {
         if (is_null($mapper)) {
             return $data;
         }
@@ -33,46 +35,43 @@ class SqlResult implements IteratorAggregate, Countable
     }
 
     /**
-     * @template V
-     * @param null|callable(T): V $mapper
-     * @return null|T|V
+     * @template TMapped
+     * @param null|callable(T): TMapped $mapper
+     * @return null|T|TMapped
      */
     public function getOne(?callable $mapper=null) {
-        /** @var T|false $data */
-        $data = $this->data->fetch();
-        if ($data === false) {
-            return null;
+        foreach($this->data as $item) {
+            return $this->getMappedValue($item, $mapper);
         }
-
-        return $this->getMappedValue($mapper, $data);
+        return null;
     }
 
     /**
-     * @template V
-     * @param null|callable(T): V $mapper
-     * @return array<T|V>
+     * @template TMapped
+     * @param null|callable(T): TMapped $mapper
+     * @return array<T|TMapped>
      */
     public function toArray(?callable $mapper=null): array {
         $result = [];
         /** @var T $value */
         foreach($this->data as $value) {
-            $result[] = $this->getMappedValue($mapper, $value);
+            $result[] = $this->getMappedValue($value, $mapper);
         }
         return $result;
     }
 
     /**
-     * @template K of array-key
-     * @template V
-     * @param callable(T): array{K,V} $mapper
-     * @return array<K, V>
+     * @template TKey of array-key
+     * @template TValue
+     * @param callable(T): array{TKey,TValue} $mapper
+     * @return array<TKey,TValue>
      */
     public function toMap(callable $mapper): array {
         $result = [];
         foreach($this->data as $value) {
             /**
-             * @var K $k
-             * @var V $v
+             * @var TKey $k
+             * @var TValue $v
              */
             list($k, $v) = call_user_func($mapper, $value); // @phpstan-ignore-line
             $result[$k] = $v;
@@ -81,17 +80,17 @@ class SqlResult implements IteratorAggregate, Countable
     }
 
     /**
-     * @template K of array-key
-     * @template V
-     * @param callable(T): array{K, V} $mapper
-     * @return array<K, array<V>>
+     * @template TKey of array-key
+     * @template TValue
+     * @param callable(T): array{TKey,TValue} $mapper
+     * @return array<TKey, array<TValue>>
      */
     public function toGroups(callable $mapper): array {
         $result = [];
         foreach($this->data as $value) {
             /**
-             * @var K $k
-             * @var V $v
+             * @var TKey $k
+             * @var TValue $v
              */
             list($k, $v) = call_user_func($mapper, $value); // @phpstan-ignore-line
             $result[$k][] = $v;
@@ -100,14 +99,14 @@ class SqlResult implements IteratorAggregate, Countable
     }
 
     /**
-     * @template V
-     * @param null|callable(T): V $mapper
-     * @return Traversable<T|V>
+     * @template TMapped
+     * @param null|callable(T): TMapped $mapper
+     * @return Traversable<T|TMapped>
      */
     public function iterator(?callable $mapper=null) {
         /** @var T $value */
         foreach($this->data as $value) {
-            yield $this->getMappedValue($mapper, $value);
+            yield $this->getMappedValue($value, $mapper);
         }
     }
 
@@ -120,7 +119,6 @@ class SqlResult implements IteratorAggregate, Countable
     }
 
     public function count(): int {
-        // NOT PORTABLE!!
-        return $this->data->rowCount();
+        return $this->count;
     }
 }

@@ -9,10 +9,7 @@ class ProductDTO extends AInsertableObject
 {
     private string $name;
 
-    #[
-        Column("price", serializer: [PriceSerializer::class, "serializePrice"]),
-        Column("currency", serializer: [PriceSerializer::class, "serializeCurrency"])
-    ]
+    #[Column(["price", "currency"], deserializer: [PriceSerializer::class, "deserializePrice"])]
     private Price $price;
 
     public function getName(): string {

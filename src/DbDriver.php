@@ -1,20 +1,27 @@
 <?php
 namespace IsThereAnyDeal\Database;
 
+use IsThereAnyDeal\Database\Data\ObjectBuilder;
 use Psr\Log\LoggerInterface;
 
 class DbDriver
 {
-    private \PDO $db;
+    private readonly \PDO $db;
+    private readonly ObjectBuilder $objectBuilder;
     private ?LoggerInterface $logger = null;
     private bool $profile = false;
 
     public function __construct(\PDO $db) {
         $this->db = $db;
+        $this->objectBuilder = new ObjectBuilder();
     }
 
     public function getDriver(): \PDO {
         return $this->db;
+    }
+
+    public function getObjectBuilder(): ObjectBuilder {
+        return $this->objectBuilder;
     }
 
     public function getLogger(): ?LoggerInterface {

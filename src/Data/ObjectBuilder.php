@@ -9,6 +9,7 @@ use IsThereAnyDeal\Database\Attributes\Construction;
 use IsThereAnyDeal\Database\Enums\EConstructionType;
 use ReflectionClass;
 use ReflectionException;
+use Traversable;
 
 class ObjectBuilder
 {
@@ -131,12 +132,12 @@ class ObjectBuilder
     /**
      * @template T of object
      * @param class-string<T>|T $classOrObject
-     * @param iterable<object> $data
+     * @param \Iterator<object> $data
      * @param array<mixed> ...$constructorParams
      * @return Generator<T>
      * @throws ReflectionException
      */
-    public function build(string|object $classOrObject, iterable $data, mixed ...$constructorParams): iterable {
+    public function build(string|object $classOrObject, \Iterator $data, mixed ...$constructorParams): Generator {
         $classDescriptor = $this->parseClass($classOrObject);
 
         /** @var ReflectionClass<T> $class */
@@ -146,13 +147,11 @@ class ObjectBuilder
         $properties = $classDescriptor->columns;
         $constructionType = $classDescriptor->construction;
 
-        $current = current($data);
-        if (empty($current)) {
+        if (!$data->valid()) {
             return;
         }
 
-        $dataset = new Set(array_keys(get_object_vars($current)));
-
+        $dataset = new Set(array_keys(get_object_vars($data->current())));
         $recipe = $this->getRecipe($properties, $dataset);
 
         foreach($data as $row) {

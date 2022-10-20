@@ -129,12 +129,22 @@ class PreFetchConstructorDTO {
 
 class ObjectBuilderTest extends TestCase
 {
+    public function testNoData(): void {
+
+        $data = new \EmptyIterator();
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(SimpleDTO::class, $data);
+
+        $this->assertEquals(0, iterator_count($items));
+    }
+
     public function testSimpleBuild(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["id" => 1, "title" => "Sample Title"],
             (object)["id" => 3, "title" => "Second Title"]
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(SimpleDTO::class, $data);
@@ -150,11 +160,11 @@ class ObjectBuilderTest extends TestCase
 
     public function testColumnMapping(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["product_id" => 100, "title" => "First"],
             (object)["product_id" => 123, "title" => "Second"],
             (object)["product_id" => 3843, "title" => "Third"],
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(MappedDTO::class, $data);
@@ -170,10 +180,10 @@ class ObjectBuilderTest extends TestCase
 
     public function testSimpleDeserializetion(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["type" => 2, "size" => "10"],
             (object)["type" => 1, "size" => "20"],
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(SimpleSerializedDTO::class, $data);
@@ -189,10 +199,10 @@ class ObjectBuilderTest extends TestCase
 
     public function testComplexDeserializetion(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["price" => 1999, "currency" => "USD"],
             (object)["price" => 2795, "currency" => "EUR"],
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(ComplexSerializedDTO::class, $data);
@@ -209,9 +219,9 @@ class ObjectBuilderTest extends TestCase
     }
 
     public function testPreFetchConstructor(): void {
-        $data = [
+        $data = new \ArrayIterator([
             (object)["id" => 3348, "time" => null]
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(PreFetchConstructorDTO::class, $data);
@@ -223,10 +233,10 @@ class ObjectBuilderTest extends TestCase
 
     public function testPostFetchConstructor(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["price" => 4000, "sale" => 1000, "currency" => "USD"],
             (object)["price" => 5000, "sale" =>  500, "currency" => "USD"],
-        ];
+        ]);
 
         $expected = [
             75,
@@ -245,9 +255,9 @@ class ObjectBuilderTest extends TestCase
 
     public function testNoConstructor(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["id" => 138]
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(NoConstructorDTO::class, $data);
@@ -259,10 +269,10 @@ class ObjectBuilderTest extends TestCase
 
     public function testDefaultConstructor(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["type" => 2],
             (object)["type" => 1],
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(SimpleSerializedDTO::class, $data);
@@ -278,9 +288,9 @@ class ObjectBuilderTest extends TestCase
 
     public function testConstructorParams(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["sale" => 1000, "currency" => "USD"],
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(ComplexSerializedDTO::class, $data, 10);
@@ -298,10 +308,10 @@ class ObjectBuilderTest extends TestCase
 
     public function testAnonymousClassConstruction(): void {
 
-        $data = [
+        $data = new \ArrayIterator([
             (object)["product_id" => 1, "size" => "10"],
             (object)["product_id" => 3, "size" => "20"]
-        ];
+        ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(new class {
@@ -319,4 +329,34 @@ class ObjectBuilderTest extends TestCase
             ++$i;
         }
     }
+
+    /**
+better construciton test
+    class Person
+    {
+    private $name;
+
+    public function __construct()
+    {
+    $this->tell();
+    }
+
+    public function tell()
+    {
+    if (isset($this->name)) {
+    echo "I am {$this->name}.\n";
+    } else {
+    echo "I don't have a name yet.\n";
+    }
+    }
+    }
+
+    $sth = $dbh->query("SELECT * FROM people");
+    $sth->setFetchMode(PDO::FETCH_CLASS, 'Person');
+    $person = $sth->fetch();
+    $person->tell();
+    $sth->setFetchMode(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, 'Person');
+    $person = $sth->fetch();
+    $person->tell();
+     */
 }

@@ -30,22 +30,31 @@ class SqlSelectQuery extends SqlRawQuery {
 
     /**
      * @template T of object
-     * @param class-string<T>|null $className
+     * @param null|class-string<T>|T $className
      * @param mixed ...$constructorArgs
      * @return SqlResult<T>
      * @throws SqlException
+     * @throws \ReflectionException
      */
-    final public function fetch(?string $className=null, ...$constructorArgs): SqlResult {
-        if (is_null($className)) {
-            $this->statement->setFetchMode(PDO::FETCH_OBJ);
-        } else {
-            $this->statement->setFetchMode(PDO::FETCH_CLASS, $className, $constructorArgs);
-        }
+    final public function fetch(null|string|object $className=null, mixed ...$constructorArgs): SqlResult {
+        $this->statement->setFetchMode(PDO::FETCH_OBJ);
         $this->bindParams();
         $this->execute();
 
+        $count = $this->statement->rowCount();
+        if ($count == 0) {
+            $iterator = new \EmptyIterator();
+        } else {
+            /** @var \Iterator<object> */
+            $iterator = $this->statement->getIterator();
+            if (!is_null($className)) {
+                $objectBuilder = $this->driver->getObjectBuilder();
+                $iterator = $objectBuilder->build($className, $iterator, $constructorArgs);
+            }
+        }
+
         /** @var SqlResult<T> $result */
-        $result = new SqlResult($this->statement);
+        $result = new SqlResult($iterator, $count);
         return $result;
     }
 

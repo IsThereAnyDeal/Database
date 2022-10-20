@@ -7,13 +7,15 @@ use Psr\Log\LoggerInterface;
 
 abstract class SqlQuery {
 
-    protected \PDO $db;
+    protected readonly DbDriver $driver;
+    protected readonly \PDO $db;
     protected \PDOStatement $statement;
 
     private bool $profile;
     private ?LoggerInterface $logger;
 
     public function __construct(DbDriver $db) {
+        $this->driver = $db;
         $this->db = $db->getDriver();
         $this->profile = $db->isProfile();
         $this->logger = $db->getLogger();
