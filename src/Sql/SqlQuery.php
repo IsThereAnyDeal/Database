@@ -2,7 +2,7 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use IsThereAnyDeal\Database\DbDriver;
-use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
+use IsThereAnyDeal\Database\Exceptions\SqlException;
 use Psr\Log\LoggerInterface;
 
 abstract class SqlQuery {

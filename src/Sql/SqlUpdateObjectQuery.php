@@ -2,8 +2,8 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use IsThereAnyDeal\Database\DbDriver;
-use IsThereAnyDeal\Database\Sql\Exceptions\MissingParameterException;
-use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
+use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
+use IsThereAnyDeal\Database\Exceptions\SqlException;
 use IsThereAnyDeal\Database\Sql\Tables\Column;
 use IsThereAnyDeal\Database\Sql\Tables\Table;
 

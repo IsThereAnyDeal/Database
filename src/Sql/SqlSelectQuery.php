@@ -1,8 +1,8 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql;
 
-use IsThereAnyDeal\Database\Sql\Exceptions\InvalidParamTypeException;
-use IsThereAnyDeal\Database\Sql\Exceptions\SqlException;
+use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
+use IsThereAnyDeal\Database\Exceptions\SqlException;
 use PDO;
 
 /**

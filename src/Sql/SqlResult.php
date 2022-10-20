@@ -2,7 +2,7 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use Countable;
-use IsThereAnyDeal\Database\Sql\Exceptions\ResultsClosedException;
+use IsThereAnyDeal\Database\Exceptions\ResultsClosedException;
 use IteratorAggregate;
 use Traversable;
 

@@ -2,7 +2,7 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use IsThereAnyDeal\Database\DbDriver;
-use IsThereAnyDeal\Database\Sql\Exceptions\NotSupportedException;
+use IsThereAnyDeal\Database\Exceptions\NotSupportedException;
 use IsThereAnyDeal\Database\Sql\Tables\Column;
 use IsThereAnyDeal\Database\Sql\Tables\Table;
 

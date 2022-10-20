@@ -2,7 +2,7 @@
 namespace IsThereAnyDeal\Database\Attributes;
 
 use Attribute;
-use IsThereAnyDeal\Database\Sql\Exceptions\InvalidDeserializerException;
+use IsThereAnyDeal\Database\Exceptions\InvalidDeserializerException;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Column

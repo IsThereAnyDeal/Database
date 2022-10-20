@@ -1,4 +1,4 @@
 <?php
-namespace IsThereAnyDeal\Database\Sql\Exceptions;
+namespace IsThereAnyDeal\Database\Exceptions;
 
 class InvalidDeserializerException extends SqlException {}

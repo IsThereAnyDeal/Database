@@ -1,7 +1,7 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql\Queries;
 
-use IsThereAnyDeal\Database\Sql\Exceptions\ResultsClosedException;
+use IsThereAnyDeal\Database\Exceptions\ResultsClosedException;
 use IsThereAnyDeal\Database\Sql\SqlResult;
 use PHPUnit\Framework\TestCase;
 

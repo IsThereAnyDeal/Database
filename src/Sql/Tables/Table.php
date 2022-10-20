@@ -3,7 +3,7 @@ namespace IsThereAnyDeal\Database\Sql\Tables;
 
 use IsThereAnyDeal\Database\Attributes\TableColumn;
 use IsThereAnyDeal\Database\Attributes\TableName;
-use IsThereAnyDeal\Database\Sql\Exceptions\InvalidSetupException;
+use IsThereAnyDeal\Database\Exceptions\InvalidSetupException;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionProperty;

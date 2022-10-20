@@ -1,9 +1,9 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql;
 
-use IsThereAnyDeal\Database\Sql\Exceptions\InvalidValueCountException;
+use IsThereAnyDeal\Database\Exceptions\InvalidValueCountException;
 use PHPUnit\Framework\TestCase;
-use IsThereAnyDeal\Database\Sql\Exceptions\MissingParameterException;
+use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
 
 class ParamsTest extends TestCase
 {
