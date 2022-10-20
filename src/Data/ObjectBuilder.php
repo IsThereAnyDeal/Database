@@ -132,12 +132,12 @@ class ObjectBuilder
     /**
      * @template T of object
      * @param class-string<T>|T $classOrObject
-     * @param \Iterator<object> $data
+     * @param \Traversable<object> $data
      * @param array<mixed> ...$constructorParams
      * @return Generator<T>
      * @throws ReflectionException
      */
-    public function build(string|object $classOrObject, \Iterator $data, mixed ...$constructorParams): Generator {
+    public function build(string|object $classOrObject, \Traversable $data, mixed ...$constructorParams): Generator {
         $classDescriptor = $this->parseClass($classOrObject);
 
         /** @var ReflectionClass<T> $class */
@@ -147,20 +147,21 @@ class ObjectBuilder
         $properties = $classDescriptor->columns;
         $constructionType = $classDescriptor->construction;
 
-        if (!$data->valid()) {
-            return;
-        }
-
-        $dataset = new Set(array_keys(get_object_vars($data->current())));
-        $recipe = $this->getRecipe($properties, $dataset);
-
+        $buildRecipe = true;
         foreach($data as $row) {
+            if ($buildRecipe) {
+                $dataset = new Set(array_keys(get_object_vars($row)));
+                $recipe = $this->getRecipe($properties, $dataset);
+                $buildRecipe = false;
+            }
+
             $instance = $class->newInstanceWithoutConstructor();
 
             if ($constructionType == EConstructionType::BeforeFetch) {
                 $class->getConstructor()?->invokeArgs($instance, $constructorParams);
             }
 
+            /** @var array<SColumnRecipe> $recipe */
             foreach($recipe as $item) {
                 $item->property->setValue($instance, is_string($item->setter)
                     ? $row->{$item->setter}

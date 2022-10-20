@@ -43,18 +43,18 @@ class SqlSelectQuery extends SqlRawQuery {
 
         $count = $this->statement->rowCount();
         if ($count == 0) {
-            $iterator = new \EmptyIterator();
+            $data = new \EmptyIterator();
         } else {
-            /** @var \Iterator<object> */
-            $iterator = $this->statement->getIterator();
+            /** @var \Traversable<object> */
+            $data = $this->statement;
             if (!is_null($className)) {
                 $objectBuilder = $this->driver->getObjectBuilder();
-                $iterator = $objectBuilder->build($className, $iterator, $constructorArgs);
+                $data = $objectBuilder->build($className, $data, $constructorArgs);
             }
         }
 
         /** @var SqlResult<T> $result */
-        $result = new SqlResult($iterator, $count);
+        $result = new SqlResult($data, $count);
         return $result;
     }
 

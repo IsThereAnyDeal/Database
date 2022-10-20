@@ -2,6 +2,7 @@
 namespace IsThereAnyDeal\Database\Sql;
 
 use Countable;
+use IsThereAnyDeal\Database\Sql\Exceptions\ResultsClosedException;
 use IteratorAggregate;
 use Traversable;
 
@@ -11,14 +12,18 @@ use Traversable;
  */
 class SqlResult implements IteratorAggregate, Countable
 {
+    /** @var ?Traversable<T> $data */
+    private ?Traversable $data;
+    private int $count;
+
     /**
      * @param Traversable<T> $data
      * @param int $count
      */
-    public function __construct(
-        private readonly Traversable $data,
-        private readonly int         $count
-    ) {}
+    public function __construct(Traversable $data, int $count) {
+        $this->data = $data;
+        $this->count = $count;
+    }
 
     /**
      * @template TMapped
@@ -34,14 +39,30 @@ class SqlResult implements IteratorAggregate, Countable
         return call_user_func($mapper, $data); // @phpstan-ignore-line
     }
 
+    private function ensureResults(): void {
+        if (is_null($this->data)) {
+            throw new ResultsClosedException();
+        }
+    }
+
+    private function close(): void {
+        $this->data = null;
+        $this->count = 0;
+    }
+
     /**
      * @template TMapped
      * @param null|callable(T): TMapped $mapper
      * @return null|T|TMapped
+     * @throws ResultsClosedException
      */
     public function getOne(?callable $mapper=null) {
+        $this->ensureResults();
+
         foreach($this->data as $item) {
-            return $this->getMappedValue($item, $mapper);
+            $result = $this->getMappedValue($item, $mapper);
+            $this->close();
+            return $result;
         }
         return null;
     }
@@ -50,13 +71,17 @@ class SqlResult implements IteratorAggregate, Countable
      * @template TMapped
      * @param null|callable(T): TMapped $mapper
      * @return array<T|TMapped>
+     * @throws ResultsClosedException
      */
     public function toArray(?callable $mapper=null): array {
+        $this->ensureResults();
+
         $result = [];
         /** @var T $value */
         foreach($this->data as $value) {
             $result[] = $this->getMappedValue($value, $mapper);
         }
+        $this->close();
         return $result;
     }
 
@@ -65,8 +90,11 @@ class SqlResult implements IteratorAggregate, Countable
      * @template TValue
      * @param callable(T): array{TKey,TValue} $mapper
      * @return array<TKey,TValue>
+     * @throws ResultsClosedException
      */
     public function toMap(callable $mapper): array {
+        $this->ensureResults();
+
         $result = [];
         foreach($this->data as $value) {
             /**
@@ -76,6 +104,7 @@ class SqlResult implements IteratorAggregate, Countable
             list($k, $v) = call_user_func($mapper, $value); // @phpstan-ignore-line
             $result[$k] = $v;
         }
+        $this->close();
         return $result;
     }
 
@@ -84,8 +113,11 @@ class SqlResult implements IteratorAggregate, Countable
      * @template TValue
      * @param callable(T): array{TKey,TValue} $mapper
      * @return array<TKey, array<TValue>>
+     * @throws ResultsClosedException
      */
     public function toGroups(callable $mapper): array {
+        $this->ensureResults();
+
         $result = [];
         foreach($this->data as $value) {
             /**
@@ -95,6 +127,7 @@ class SqlResult implements IteratorAggregate, Countable
             list($k, $v) = call_user_func($mapper, $value); // @phpstan-ignore-line
             $result[$k][] = $v;
         }
+        $this->close();
         return $result;
     }
 
@@ -102,20 +135,30 @@ class SqlResult implements IteratorAggregate, Countable
      * @template TMapped
      * @param null|callable(T): TMapped $mapper
      * @return Traversable<T|TMapped>
+     * @throws ResultsClosedException
      */
     public function iterator(?callable $mapper=null) {
+        $this->ensureResults();
+
         /** @var T $value */
         foreach($this->data as $value) {
             yield $this->getMappedValue($value, $mapper);
         }
+        $this->close();
     }
 
-    /** @return Traversable<T> */
+    /**
+     * @return Traversable<T>
+     * @throws ResultsClosedException
+     */
     public function getIterator(): Traversable {
+        $this->ensureResults();
+
         /** @var T $value */
         foreach($this->data as $value) {
             yield $value;
         }
+        $this->close();
     }
 
     public function count(): int {
