@@ -45,8 +45,8 @@ class SqlUpdateObjectQuery extends SqlQuery {
             throw new SqlException();
         }
 
-        $params = new Params($sql, $params);
-        $this->whereParams = $params->getParams();
+        $params = new ParamParser($sql, $params);
+        $this->whereParams = $params->getValues();
         $this->whereSql = $params->getQuery();
         return $this;
     }
@@ -93,15 +93,5 @@ class SqlUpdateObjectQuery extends SqlQuery {
 
     public function getAffectedRowCount(): int {
         return $this->statement->rowCount();
-    }
-
-    public function dump(): array {
-        $this->prepare();
-
-        return [
-            $this->statement->queryString,
-            $this->values ?? [],
-            $this->whereParams ?? []
-        ];
     }
 }

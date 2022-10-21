@@ -1,5 +1,5 @@
 <?php
-namespace IsThereAnyDeal\Database\Sql;
+namespace IsThereAnyDeal\Database\Sql\Select;
 
 use Countable;
 use IsThereAnyDeal\Database\Exceptions\ResultsClosedException;

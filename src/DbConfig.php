@@ -7,6 +7,7 @@ use Nette\Schema\Schema;
 
 final class DbConfig
 {
+
     private object $config;
 
     private function getSchema(): Schema {
@@ -23,8 +24,22 @@ final class DbConfig
         ]);
     }
 
+    /**
+     * @param array{
+     *     driver: string,
+     *     host: string,
+     *     port: int,
+     *     password: string,
+     *     database: string,
+     *     user: string,
+     *     user_custom: bool,
+     *     user_prefix: string,
+     *     profiler: bool
+     * } $config
+     * */
     public function __construct(array $config) {
-        $this->config = (new Processor())
+         // @phpstan-ignore-next-line
+         $this->config = (new Processor())
             ->process($this->getSchema(), $config);
     }
 

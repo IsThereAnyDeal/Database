@@ -1,7 +1,8 @@
 <?php
-namespace IsThereAnyDeal\Database\Sql;
+namespace IsThereAnyDeal\Database\Sql\Replace;
 
 use IsThereAnyDeal\Database\DbDriver;
+use IsThereAnyDeal\Database\Sql\SqlInsertQuery;
 use IsThereAnyDeal\Database\Sql\Tables\Table;
 
 class SqlReplaceQuery extends SqlInsertQuery {

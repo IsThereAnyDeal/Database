@@ -175,14 +175,6 @@ class SqlInsertQuery extends SqlQuery {
         $this->insertedRowCount = 0;
     }
 
-    public function dump(): array {
-        $this->prepare();
-        return [
-            $this->statement->queryString,
-            $this->data
-        ];
-    }
-
     /**
      * @throws NotSupportedException
      */

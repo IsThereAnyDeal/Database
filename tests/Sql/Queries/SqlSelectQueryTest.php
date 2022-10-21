@@ -3,8 +3,8 @@ namespace IsThereAnyDeal\Database\Sql\Queries;
 
 use IsThereAnyDeal\Database\Data\ObjectBuilder;
 use IsThereAnyDeal\Database\DbDriver;
-use IsThereAnyDeal\Database\Sql\SqlResult;
-use IsThereAnyDeal\Database\Sql\SqlSelectQuery;
+use IsThereAnyDeal\Database\Sql\Select\SqlResult;
+use IsThereAnyDeal\Database\Sql\Select\SqlSelectQuery;
 use IsThereAnyDeal\Database\TestObjects\ProductDTO;
 use IsThereAnyDeal\Database\TestObjects\ProductTable;
 use PDO;

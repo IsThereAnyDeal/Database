@@ -5,15 +5,12 @@ use IsThereAnyDeal\Database\Exceptions\InvalidValueCountException;
 use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
 use IsThereAnyDeal\Database\Exceptions\SqlException;
 
-class Params
+class ParamParser
 {
     private string $query;
 
     /** @var array<scalar> */
     private array $params;
-
-    /** @var array<int> */
-    private array $counts;
 
     /**
      * @param string $query
@@ -28,7 +25,6 @@ class Params
         $map = array_merge(...$maps);
 
         $this->params = [];
-        $this->counts = [];
         foreach($m[1] as $index => $key) {
             $keyRegex = "#{$key}(\(\d+\))?#";
             $n = empty($m[2][$index]) ? 1 : (int)$m[2][$index];
@@ -48,8 +44,7 @@ class Params
                     }
 
                     $this->query = $query;
-                    $this->params = array_merge($this->params, $this->flattenArray($value));
-                    $this->counts[] = count($value);
+                    $this->params = array_merge($this->params, $value);
                 } else {
                     if ($n !== 1) {
                         throw new InvalidValueCountException();
@@ -62,7 +57,6 @@ class Params
 
                     $this->query = $query;
                     $this->params[] = $value;
-                    $this->counts[] = 1;
                 }
             }
         }
@@ -73,17 +67,10 @@ class Params
     }
 
     /**
-     * @return array<scalar>
+     * @return list<scalar>
      */
-    public function getParams(): array {
+    public function getValues(): array {
         return $this->params;
-    }
-
-    /**
-     * @return array<int>
-     */
-    public function getCounts(): array {
-        return $this->counts;
     }
 
     /**
@@ -94,20 +81,11 @@ class Params
     private function getInTemplate(array $values, int $size=1): string {
         $template = $size === 1
             ? "?"
-            : "(".implode(",", array_fill(0, $size, "?")).")";
+            : "(?".str_repeat(",?", $size-1).")";
 
-        return "(".implode(",", array_fill(0, count($values) / $size, $template)).")";
-    }
-
-    /**
-     * @param array<scalar|scalar[]> $array
-     * @return array<scalar>
-     */
-    private function flattenArray(array $array): array {
-        return iterator_to_array( // @phpstan-ignore-line
-            new \RecursiveIteratorIterator(
-                new \RecursiveArrayIterator($array)
-            ), false
-        );
+        $tuples = count($values) / $size;
+        return $tuples === 1
+            ? "({$template})"
+            : "($template".str_repeat(",$template", $tuples-1).")";
     }
 }

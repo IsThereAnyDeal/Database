@@ -2,7 +2,7 @@
 namespace IsThereAnyDeal\Database\Sql\Queries;
 
 use IsThereAnyDeal\Database\Exceptions\ResultsClosedException;
-use IsThereAnyDeal\Database\Sql\SqlResult;
+use IsThereAnyDeal\Database\Sql\Select\SqlResult;
 use PHPUnit\Framework\TestCase;
 
 class SqlResultTest extends TestCase

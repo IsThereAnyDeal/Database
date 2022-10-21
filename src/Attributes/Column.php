@@ -8,6 +8,7 @@ use IsThereAnyDeal\Database\Exceptions\InvalidDeserializerException;
 class Column
 {
     /**
+     * @param null|string|string[] $name
      * @param callable $serializer
      * @param callable $deserializer
      * @throws InvalidDeserializerException
