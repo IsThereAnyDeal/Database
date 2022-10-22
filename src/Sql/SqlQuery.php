@@ -82,4 +82,12 @@ abstract class SqlQuery {
             $this->logger?->info($statement->queryString, ["execution" => $time]);
         }
     }
+
+    final protected function getLastInsertedId(): int {
+        $id = $this->db->lastInsertId();
+        if ($id === false) {
+            return 0;
+        }
+        return (int)$id;
+    }
 }

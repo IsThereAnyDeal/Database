@@ -12,6 +12,22 @@ use ReflectionClass;
 class ValueMapper
 {
     /**
+     * @param int $valueCount
+     * @param int $tupleSize
+     * @return string
+     */
+    public static function getParamTemplate(int $valueCount, int $tupleSize=1): string {
+        $template = $tupleSize === 1
+            ? "?"
+            : "(?".str_repeat(",?", $tupleSize-1).")";
+
+        $tuples = $valueCount / $tupleSize;
+        return $tuples === 1
+            ? "({$template})"
+            : "($template".str_repeat(",$template", $tuples-1).")";
+    }
+
+    /**
      * Generate value mapper for object with selected columns
      *
      * @template T of object

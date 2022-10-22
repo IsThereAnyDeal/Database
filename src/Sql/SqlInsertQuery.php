@@ -1,21 +1,27 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql;
 
+use Ds\Set;
+use Ds\Vector;
+use IsThereAnyDeal\Database\Data\ValueMapper;
 use IsThereAnyDeal\Database\DbDriver;
-use IsThereAnyDeal\Database\Exceptions\NotSupportedException;
 use IsThereAnyDeal\Database\Sql\Tables\Column;
 use IsThereAnyDeal\Database\Sql\Tables\Table;
 
 class SqlInsertQuery extends SqlQuery {
 
     private Table $table;
-    /** @var Column[] */
-    private array $columns;
     private bool $ignore = false;
-    protected bool $replace = false;
+    private bool $replace = false;
 
-    /** @var array<Column|array{Column, string}> */
-    private array $update = [];
+    /** @var Set<string> */
+    private Set $columns;
+
+    /** @var array<string> */
+    private array $updateColumns = [];
+
+    /** @var array<array{string,string}> */
+    private array $updateExpressions = [];
 
     /**
      * Size of the stack, when 0, stack is not automatically persisted
@@ -27,77 +33,63 @@ class SqlInsertQuery extends SqlQuery {
      */
     private int $currentStacked = 0;
 
-    private array $data = [];
+    /** @var Vector<scalar> */
+    private Vector $values;
 
-    private int $preparedForCount = -1;
+    /** @var ?callable(object): array<scalar> $valueMapper */
+    private mixed $valueMapper = null;
 
+    private int $insertedId = 0;
     private int $insertedRowCount = 0;
 
     public function __construct(DbDriver $db, Table $table) {
         parent::__construct($db);
         $this->table = $table;
+        $this->values = new Vector();
     }
 
-    /**
-     * @return static
-     */
-    final public function stackSize(int $size): self {
+    final public function stackSize(int $size): static {
         $this->stackSize = $size;
         return $this;
     }
 
-    /**
-     * @return static
-     */
-    final public function columns(Column ...$columns): self {
-        $this->columns = $columns;
+    final public function columns(Column ...$columns): static {
+        $this->columns = new Set(array_map(fn(Column $c) => $c->name, $columns));
         return $this;
     }
 
-    /**
-     * @return static
-     */
-    final public function ignore(bool $value=true): self {
+    final public function ignore(bool $value=true): static {
         $this->ignore = $value;
         return $this;
     }
 
-    /**
-     * @return static
-     */
-    final public function onDuplicateKeyUpdate(Column ...$columns): self {
-        $this->update = array_merge($this->update, $columns);
+    final public function onDuplicateKeyUpdate(Column ...$columns): static {
+        $this->updateColumns = array_map(fn(Column $c) => $c->name, $columns);
         return $this;
     }
 
-    /**
-     * @return static
-     */
-    final public function onDuplicateKeyExpression(Column $column, string $expression): self {
-        $this->update[] = [$column, $expression];
+    final public function onDuplicateKeyExpression(Column $column, string $expression): static {
+        $this->updateExpressions[] = [$column->name, $expression];
         return $this;
     }
 
-    private function getValuesTemplate(int $count=1): string {
-        $template = "("
-            .implode(", ",
-                array_fill(0, count($this->columns), "?"))
-            .")";
-        if ($count == 1) {
-            return $template;
+    final public function stack(object $obj): static {
+        if (is_null($this->valueMapper)) {
+            $this->valueMapper = ValueMapper::getObjectValueMapper($this->columns, $obj);
         }
-        return implode(", ", array_fill(0, $count, $template));
+
+        $this->values->push(...call_user_func($this->valueMapper, $obj));
+        $this->currentStacked++;
+
+        if ($this->stackSize > 0 && $this->currentStacked >= $this->stackSize) {
+            $this->persist();
+        }
+        return $this;
     }
 
-    private function prepare(): void {
-        if ($this->preparedForCount == $this->currentStacked) {
-            return;
-        }
-
+    private function buildQuery(): string {
         $ignore = "";
         $update = "";
-        $columns = implode(",", array_map(fn($column) => "`{$column->name}`", $this->columns));
-        $values = $this->getValuesTemplate($this->currentStacked);
 
         $action = $this->replace
             ? "REPLACE"
@@ -107,50 +99,35 @@ class SqlInsertQuery extends SqlQuery {
             $ignore = "IGNORE";
         }
 
-        if (count($this->update) > 0) {
-            $update = "ON DUPLICATE KEY UPDATE "
-                .implode(", ",
-                    array_map(function($c) {
-                        if ($c instanceof Column) {
-                            return "`{$c->name}`=VALUES(`{$c->name}`)";
-                        /**
-                         * @phpstan-ignore-next-line This just adds additional safety for future,
-                         * even though right now $c[0] is always Column
-                         */
-                        } elseif (is_array($c) && $c[0] instanceof Column) {
-                            return "`{$c[0]->name}`={$c[1]}";
-                        } else {
-                            throw new \InvalidArgumentException();
-                        }
-                    }, $this->update)
-                );
+        if (count($this->updateColumns) > 0 || count($this->updateExpressions) > 0) {
+            $update = "ON DUPLICATE KEY UPDATE";
+            if (count($this->updateColumns) > 0) {
+                $update .= " ".implode(", ",
+                        array_map(fn(string $c) => "`{$c}`=VALUES(`$c`)", $this->updateColumns)
+                    );
+            }
+            if (count($this->updateExpressions) > 0) {
+                $update .= " ".implode(", ",
+                        /** @var array{string, string} $s */
+                        array_map(fn(array $s) => "`{$s[0]}`={$s[1]}", $this->updateExpressions)
+                    );
+            }
         }
 
-        $query = "{$action} {$ignore} INTO {$this->table->getName()} ({$columns}) VALUES {$values} {$update}";
-        $this->statement = $this->db->prepare($query);
-        $this->preparedForCount = $this->currentStacked;
+        $columns = "`".implode("`,`", $this->columns->toArray())."`";
+
+        $valueListTemplate = ValueMapper::getParamTemplate(count($this->columns));
+        $values = $valueListTemplate.str_repeat(",\n{$valueListTemplate}", $this->currentStacked-1);
+
+        return <<<SQL
+            {$action} {$ignore} INTO {$this->table->getName()} ({$columns})
+            VALUES {$values}
+            {$update}
+            SQL;
     }
 
-    /**
-     * @return static
-     */
-    final public function stack(IInsertable $obj): self {
-        foreach($this->columns as $column) {
-            $this->data[] = $obj->getDbValue($column);
-        }
-        $this->currentStacked++;
-
-        if ($this->stackSize > 0 && $this->currentStacked >= $this->stackSize) {
-            $this->persist();
-        }
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    final public function persist(?IInsertable $obj=null): self {
-        if (count($this->data) == 0 && is_null($obj)) {
+    final public function persist(?IInsertable $obj=null): static {
+        if (count($this->values) == 0 && is_null($obj)) {
             return $this;
         }
 
@@ -158,39 +135,32 @@ class SqlInsertQuery extends SqlQuery {
             $this->stack($obj);
         }
 
-        $this->prepare();
-        $this->execute($this->data);
-        $this->insertedRowCount += $this->statement->rowCount();
+        $statement = $this->prepare($this->buildQuery(), $this->values->toArray());
+        $this->execute($statement);
+        $this->insertedId = $this->getLastInsertedId();
+        $this->insertedRowCount += $statement->rowCount();
         $this->clear();
+
         return $this;
     }
 
+    public function getInsertedId(): int {
+        return $this->insertedId;
+    }
+
+    public function getInsertedRowCount(): int {
+        return $this->insertedRowCount;
+    }
+
     public function clear(): void {
-        $this->data = [];
+        $this->values->clear();
         $this->currentStacked = 0;
     }
 
     public function reset(): void {
         $this->clear();
+        $this->insertedId = 0;
         $this->insertedRowCount = 0;
-    }
-
-    /**
-     * @throws NotSupportedException
-     */
-    public function getInsertedId(): int {
-        $id = $this->db->lastInsertId();
-        if ($id === false) {
-            return 0;
-        } elseif (is_numeric($id)) {
-            return (int)$id;
-        } else {
-            // right now we only support mysql databases, which return numeric IDs
-            throw new NotSupportedException();
-        }
-    }
-
-    public function getInsertedRowCount(): int {
-        return $this->insertedRowCount;
+        $this->valueMapper = null;
     }
 }

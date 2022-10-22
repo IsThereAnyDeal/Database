@@ -1,6 +1,7 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql;
 
+use IsThereAnyDeal\Database\Data\ValueMapper;
 use IsThereAnyDeal\Database\Exceptions\InvalidValueCountException;
 use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
 use IsThereAnyDeal\Database\Exceptions\SqlException;
@@ -38,7 +39,8 @@ class ParamParser
                         throw new InvalidValueCountException();
                     }
 
-                    $query = preg_replace($keyRegex, $this->getInTemplate($value, $n), $this->query, 1);
+                    $template = ValueMapper::getParamTemplate(count($value), $n);
+                    $query = preg_replace($keyRegex, $template, $this->query, 1);
                     if (is_null($query)) {
                         throw new SqlException();
                     }
@@ -71,21 +73,5 @@ class ParamParser
      */
     public function getValues(): array {
         return $this->params;
-    }
-
-    /**
-     * @param array<scalar> $values
-     * @param int $size
-     * @return string
-     */
-    private function getInTemplate(array $values, int $size=1): string {
-        $template = $size === 1
-            ? "?"
-            : "(?".str_repeat(",?", $size-1).")";
-
-        $tuples = count($values) / $size;
-        return $tuples === 1
-            ? "({$template})"
-            : "($template".str_repeat(",$template", $tuples-1).")";
     }
 }
