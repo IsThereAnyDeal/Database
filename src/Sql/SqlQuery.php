@@ -4,7 +4,6 @@ namespace IsThereAnyDeal\Database\Sql;
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
 use IsThereAnyDeal\Database\Exceptions\InvalidQueryException;
-use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
 use IsThereAnyDeal\Database\Exceptions\SqlException;
 use PDO;
 use PDOStatement;
@@ -13,7 +12,7 @@ use Psr\Log\LoggerInterface;
 abstract class SqlQuery {
 
     protected readonly DbDriver $driver;
-    protected readonly \PDO $db;
+    private readonly \PDO $db;
 
     private PDOStatement $statement;
     private string $queryHash = "";

@@ -14,11 +14,13 @@ class ValueMapper
     /**
      * Generate value mapper for object with selected columns
      *
+     * @template T of object
      * @param Set<string> $columnSet
-     * @param object $obj
-     * @return callable(object): array<scalar>  Mapper that generates array of scalar values to be used in PDO for queries
+     * @param class-string<T>|T $obj
+     * @return callable(T): array<scalar>  Mapper that generates array of scalar values to be used in PDO for queries
+     * @throws \ReflectionException
      */
-    public static function getObjectValueMapper(Set $columnSet, object $obj) {
+    public static function getObjectValueMapper(Set $columnSet, string|object $obj) {
         $class = new ReflectionClass($obj);
 
         /** @var array<callable(object): array<string,scalar>> $getters */
