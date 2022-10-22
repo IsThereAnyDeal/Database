@@ -3,12 +3,11 @@ namespace IsThereAnyDeal\Database\TestObjects;
 
 class PriceSerializer
 {
-    public function serializePrice(Price $price) {
-        return $price->amount;
-    }
-
-    public function serializeCurrency(Price $price) {
-        return $price->currency;
+    public static function serializePrice(Price $price) {
+        return [
+            $price->amount,
+            $price->currency->code
+        ];
     }
 
     public static function deserializePrice(object $row, array $names) {
