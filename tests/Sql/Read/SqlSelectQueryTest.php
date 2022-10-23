@@ -14,8 +14,8 @@ use PHPUnit\Framework\TestCase;
 
 class SqlSelectQueryTest extends TestCase
 {
-    private MockObject $pdoMock;
-    private MockObject $driverMock;
+    private PDO $pdoMock;
+    private DbDriver $driverMock;
 
     protected function setUp(): void {
         $this->pdoMock = $this->createMock(PDO::class);

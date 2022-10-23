@@ -23,6 +23,7 @@
     "php-sage/sage": "^1.2"
   },
   "scripts": {
-    "phpstan": "vendor/bin/phpstan analyse -c phpstan.neon --ansi"
+    "phpstan": "vendor/bin/phpstan analyse -c phpstan.neon --ansi",
+    "phpstan-cache": "vendor/bin/phpstan clear-result-cache -c phpstan.neon"
   }
 }

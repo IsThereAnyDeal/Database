@@ -14,6 +14,7 @@ enum EUnit
         };
     }
 
+    /** @return array{int, string} */
     public function serializePair(): array {
         return match ($this) {
             self::FirstValue => [1, "first"],
@@ -28,6 +29,7 @@ enum EUnit
         };
     }
 
+    /** @return array{int, string} */
     public static function staticSerializePair(EUnit $value): array {
         return match ($value) {
             self::FirstValue => [1, "first"],
