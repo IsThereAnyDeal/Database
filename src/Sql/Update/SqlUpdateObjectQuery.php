@@ -108,7 +108,7 @@ class SqlUpdateObjectQuery extends SqlQuery {
         ];
     }
 
-    final public function update(object $obj): void {
+    final public function update(object $obj): int {
         if (!isset($this->columns) || count($this->columns) == 0) {
             throw new SqlException();
         }
@@ -124,5 +124,7 @@ class SqlUpdateObjectQuery extends SqlQuery {
         $this->execute($statement);
 
         $this->values = [];
+
+        return $statement->rowCount();
     }
 }
