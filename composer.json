@@ -7,7 +7,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "IsThereAnyDeal\\Database\\": "tests"
+      "IsThereAnyDeal\\Database\\Tests\\": "tests"
     }
   },
   "require": {

@@ -9,8 +9,8 @@ use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
 use IsThereAnyDeal\Database\Exceptions\SqlException;
 use IsThereAnyDeal\Database\Sql\ParamParser;
 use IsThereAnyDeal\Database\Sql\SqlQuery;
-use IsThereAnyDeal\Database\Sql\Tables\Column;
-use IsThereAnyDeal\Database\Sql\Tables\Table;
+use IsThereAnyDeal\Database\Tables\Column;
+use IsThereAnyDeal\Database\Tables\Table;
 
 class SqlUpdateObjectQuery extends SqlQuery {
 

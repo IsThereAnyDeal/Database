@@ -1,9 +1,10 @@
 <?php
-namespace IsThereAnyDeal\Database\Sql;
+namespace IsThereAnyDeal\Database\Tests\Sql;
 
 use IsThereAnyDeal\Database\Exceptions\InvalidValueCountException;
-use PHPUnit\Framework\TestCase;
 use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
+use IsThereAnyDeal\Database\Sql\ParamParser;
+use PHPUnit\Framework\TestCase;
 
 class ParamsTest extends TestCase
 {
@@ -12,7 +13,6 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE 1", $params->getQuery());
         $this->assertEquals([], $params->getValues());
-        $this->assertEquals([], $params->getCounts());
     }
 
     public function testSimpleParam(): void {
@@ -22,7 +22,6 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE column=?", $params->getQuery());
         $this->assertEquals(["value"], $params->getValues());
-        $this->assertEquals([1], $params->getCounts());
     }
 
     public function testMultiuseParam(): void {
@@ -32,7 +31,6 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE columnA=? AND columnB=?", $params->getQuery());
         $this->assertEquals(["value", "value"], $params->getValues());
-        $this->assertEquals([1, 1], $params->getCounts());
     }
 
     public function testArrayParam(): void {
@@ -42,7 +40,6 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE column IN (?,?,?,?,?)", $params->getQuery());
         $this->assertEquals([1, 2, 3, 4, 5], $params->getValues());
-        $this->assertEquals([5], $params->getCounts());
     }
 
     public function testTuplesParam(): void {
@@ -57,7 +54,6 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE (column_a, column_b) IN ((?,?),(?,?),(?,?),(?,?))", $params->getQuery());
         $this->assertEquals(["a", 1, "b", 2, "c", 3, "d", 4], $params->getValues());
-        $this->assertEquals([8], $params->getCounts());
 
         // small
         $params = new ParamParser("WHERE (column_a, column_b) IN :param(2)", [
@@ -66,7 +62,6 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE (column_a, column_b) IN ((?,?))", $params->getQuery());
         $this->assertEquals(["a", 1], $params->getValues());
-        $this->assertEquals([2], $params->getCounts());
     }
 
     public function testInvalidValueCount(): void {
@@ -96,7 +91,6 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE column=?", $params->getQuery());
         $this->assertEquals(["value"], $params->getValues());
-        $this->assertEquals([1], $params->getCounts());
     }
 
     public function testOutOfOrderParams(): void {
@@ -108,6 +102,5 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE columnA=? AND columnB=? AND columnC=?", $params->getQuery());
         $this->assertEquals(["v1", "v2", "v3"], $params->getValues());
-        $this->assertEquals([1, 1, 1], $params->getCounts());
     }
 }
