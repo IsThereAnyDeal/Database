@@ -5,10 +5,15 @@ use Ds\Set;
 use Ds\Vector;
 use IsThereAnyDeal\Database\Data\ValueMapper;
 use IsThereAnyDeal\Database\DbDriver;
+use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
+use IsThereAnyDeal\Database\Exceptions\SqlException;
 use IsThereAnyDeal\Database\Sql\SqlQuery;
 use IsThereAnyDeal\Database\Tables\Column;
 use IsThereAnyDeal\Database\Tables\Table;
 
+/**
+ * @template T of object
+ */
 class SqlInsertQuery extends SqlQuery {
 
     private Table $table;
@@ -34,10 +39,10 @@ class SqlInsertQuery extends SqlQuery {
      */
     private int $currentStacked = 0;
 
-    /** @var Vector<scalar> */
+    /** @var Vector<null|scalar> */
     private Vector $values;
 
-    /** @var ?callable(object): array<scalar> $valueMapper */
+    /** @var ?\Closure(T): list<null|scalar> $valueMapper */
     private mixed $valueMapper = null;
 
     private int $insertedId = 0;
@@ -74,12 +79,19 @@ class SqlInsertQuery extends SqlQuery {
         return $this;
     }
 
+    /**
+     * @param T $obj
+     * @return static
+     * @throws \ReflectionException
+     */
     final public function stack(object $obj): static {
         if (is_null($this->valueMapper)) {
             $this->valueMapper = ValueMapper::getObjectValueMapper($this->columns, $obj);
         }
 
-        $this->values->push(...call_user_func($this->valueMapper, $obj));
+        /** @var list<scalar> $scalars */
+        $scalars = call_user_func($this->valueMapper, $obj);
+        $this->values->push(...$scalars);
         $this->currentStacked++;
 
         if ($this->stackSize > 0 && $this->currentStacked >= $this->stackSize) {
@@ -119,12 +131,19 @@ class SqlInsertQuery extends SqlQuery {
 
         $columns = "`".implode("`,`", $this->columns->toArray())."`";
 
-        $valueListTemplate = ValueMapper::getParamTemplate(count($this->columns));
+        $valueListTemplate = ValueMapper::getValueTemplate(count($this->columns));
         $values = $valueListTemplate.str_repeat(",\n{$valueListTemplate}", $this->currentStacked-1);
 
         return "{$action}{$ignore} INTO `{$this->table->getName()}` ({$columns})\nVALUES {$values}{$update}";
     }
 
+    /**
+     * @param T|null $obj
+     * @return static
+     * @throws InvalidParamTypeException
+     * @throws SqlException
+     * @throws \ReflectionException
+     */
     final public function persist(?object $obj=null): static {
         if (count($this->values) == 0 && is_null($obj)) {
             return $this;

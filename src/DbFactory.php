@@ -18,6 +18,9 @@ class DbFactory {
         // singleton factory
     }
 
+    /**
+     * @var array<string, DbDriver>
+     */
     private array $connections = [];
 
     public static function getDatabase(DbConfig $config, ?string $user=null): DbDriver {

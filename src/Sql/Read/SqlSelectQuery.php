@@ -1,6 +1,7 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql\Read;
 
+use BackedEnum;
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
 use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
@@ -14,8 +15,8 @@ class SqlSelectQuery extends SqlQuery {
     private string $userQuery;
     private string $query;
 
-    /** @var list<scalar> */
-    private array $params = [];
+    /** @var list<null|scalar> */
+    private array $values = [];
 
     public function __construct(DbDriver $db, string $query) {
         $this->checkQueryStartsWith($query, "SELECT");
@@ -26,14 +27,14 @@ class SqlSelectQuery extends SqlQuery {
     }
 
     /**
-     * @param array<string, scalar|scalar> ...$values
+     * @param array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> ...$values
      * @return SqlSelectQuery
      * @throws SqlException
      * @throws MissingParameterException
      */
     final public function params(array ...$values): self {
         $params = new ParamParser($this->userQuery, ...$values);
-        $this->params = $params->getValues();
+        $this->values = $params->getValues();
         $this->query = $params->getQuery();
         return $this;
     }
@@ -47,7 +48,7 @@ class SqlSelectQuery extends SqlQuery {
      * @throws \ReflectionException
      */
     final public function fetch(null|string|object $className=null, mixed ...$constructorArgs): SqlResult {
-        $statement = $this->prepare($this->query, $this->params);
+        $statement = $this->prepare($this->query, $this->values);
         $statement->setFetchMode(PDO::FETCH_OBJ);
         $this->execute($statement);
 
@@ -69,7 +70,7 @@ class SqlSelectQuery extends SqlQuery {
     }
 
     /**
-     * @param ?array<string, scalar|scalar> $params
+     * @param ?array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
      * @return scalar|null
      * @throws MissingParameterException
      * @throws SqlException
@@ -80,7 +81,7 @@ class SqlSelectQuery extends SqlQuery {
             $this->params($params);
         }
 
-        $statement = $this->prepare($this->query, $this->params);
+        $statement = $this->prepare($this->query, $this->values);
         $statement->setFetchMode(PDO::FETCH_NUM);
         $this->execute($statement);
 
@@ -89,7 +90,7 @@ class SqlSelectQuery extends SqlQuery {
     }
 
     /**
-     * @param ?array<string, scalar|scalar> $params
+     * @param ?array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
      * @return array<scalar>
      * @throws SqlException
      */
@@ -98,7 +99,7 @@ class SqlSelectQuery extends SqlQuery {
             $this->params($params);
         }
 
-        $statement = $this->prepare($this->query, $this->params);
+        $statement = $this->prepare($this->query, $this->values);
         $statement->setFetchMode(PDO::FETCH_NUM);
         $this->execute($statement);
 
@@ -111,7 +112,7 @@ class SqlSelectQuery extends SqlQuery {
     }
 
     /**
-     * @param ?array<string, scalar|scalar> $params
+     * @param ?array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
      * @return array<scalar, scalar>
      * @throws SqlException
      */
@@ -120,14 +121,14 @@ class SqlSelectQuery extends SqlQuery {
             $this->params($params);
         }
 
-        $statement = $this->prepare($this->query, $this->params);
+        $statement = $this->prepare($this->query, $this->values);
         $statement->setFetchMode(PDO::FETCH_KEY_PAIR);
         $this->execute($statement);
         return $statement->fetchAll();
     }
 
     /**
-     * @param ?array<string, scalar|scalar> $params
+     * @param ?array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
      * @throws SqlException
      */
     final public function exists(?array $params=null): bool {
@@ -138,7 +139,7 @@ class SqlSelectQuery extends SqlQuery {
     }
 
     /**
-     * @param ?array<string, scalar|scalar> $params
+     * @param ?array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
      * @throws SqlException
      */
     final public function notExists(?array $params=null): bool {

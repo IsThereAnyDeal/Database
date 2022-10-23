@@ -6,11 +6,14 @@ use Ds\Set;
 use Generator;
 use IsThereAnyDeal\Database\Attributes\Column;
 use IsThereAnyDeal\Database\Attributes\Construction;
+use IsThereAnyDeal\Database\Data\Structs\SClassDescriptor;
+use IsThereAnyDeal\Database\Data\Structs\SColumnDescriptor;
+use IsThereAnyDeal\Database\Data\Structs\SColumnRecipe;
 use IsThereAnyDeal\Database\Enums\EConstructionType;
 use ReflectionClass;
 use ReflectionException;
-use Traversable;
 
+// TODO better name
 class ObjectBuilder
 {
     private const DefaultConstructionType = EConstructionType::AfterFetch;
@@ -39,7 +42,7 @@ class ObjectBuilder
      * @return SClassDescriptor
      * @throws ReflectionException
      */
-    private function parseClass($classOrObject): SClassDescriptor {
+    private function parseClass(string|object $classOrObject): SClassDescriptor {
 
         if (!is_object($classOrObject) && $this->cache->hasKey($classOrObject)) {
             return $this->cache->get($classOrObject);
@@ -94,7 +97,7 @@ class ObjectBuilder
     /**
      * @param array<SColumnDescriptor> $properties
      * @param Set<string> $dataset
-     * @return array<SColumnRecipe>
+     * @return list<SColumnRecipe>
      */
     private function getRecipe(array $properties, Set $dataset): array {
 
@@ -107,9 +110,9 @@ class ObjectBuilder
                     continue;
                 }
 
-                $setter = fn(object $o) => call_user_func(
+                $setter = fn(object $o) => call_user_func_array(
                     $cp->deserializer, // @phpstan-ignore-line
-                    $o, $dbColumns
+                    array_map(fn($prop) => $o->{$prop}, $dbColumns)
                 );
             } else {
                 $dbColumn = $cp->column;
@@ -123,13 +126,15 @@ class ObjectBuilder
                     : $dbColumn;
             }
 
-            $recipe[] = new SColumnRecipe($cp->property, $setter);
+            $recipe[] = new SColumnRecipe($cp->property, $setter); // @phpstan-ignore-line
         }
 
         return $recipe;
     }
 
     /**
+     * Build objects from raw database data
+     *
      * @template T of object
      * @param class-string<T>|T $classOrObject
      * @param \Traversable<object> $data
@@ -161,7 +166,7 @@ class ObjectBuilder
                 $class->getConstructor()?->invokeArgs($instance, $constructorParams);
             }
 
-            /** @var array<SColumnRecipe> $recipe */
+            /** @var list<SColumnRecipe> $recipe */
             foreach($recipe as $item) {
                 $item->property->setValue($instance, is_string($item->setter)
                     ? $row->{$item->setter}

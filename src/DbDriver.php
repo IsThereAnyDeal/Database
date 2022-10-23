@@ -2,6 +2,7 @@
 namespace IsThereAnyDeal\Database;
 
 use IsThereAnyDeal\Database\Data\ObjectBuilder;
+use IsThereAnyDeal\Database\Enums\EInnoDbIsolationLevel;
 use Psr\Log\LoggerInterface;
 
 class DbDriver
@@ -48,8 +49,8 @@ class DbDriver
         return $this->db->inTransaction();
     }
 
-    public function setIsolationLevel(string $isolationLevel) {
-        $this->db->query("SET TRANSACTION ISOLATION LEVEL ".$isolationLevel);
+    public function setIsolationLevel(EInnoDbIsolationLevel $isolationLevel): void {
+        $this->db->query("SET TRANSACTION ISOLATION LEVEL ".$isolationLevel->value);
     }
 
     public function isProfile(): bool {

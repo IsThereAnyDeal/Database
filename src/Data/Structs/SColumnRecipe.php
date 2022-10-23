@@ -1,6 +1,6 @@
 <?php
 
-namespace IsThereAnyDeal\Database\Data;
+namespace IsThereAnyDeal\Database\Data\Structs;
 
 use ReflectionProperty;
 
@@ -8,7 +8,7 @@ class SColumnRecipe
 {
     /**
      * @param ReflectionProperty $property
-     * @param string|callable(object): mixed $setter
+     * @param string|callable(null|scalar ...): object $setter
      */
     public function __construct(
         public readonly ReflectionProperty $property,

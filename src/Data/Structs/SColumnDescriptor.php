@@ -1,6 +1,6 @@
 <?php
 
-namespace IsThereAnyDeal\Database\Data;
+namespace IsThereAnyDeal\Database\Data\Structs;
 
 use ReflectionProperty;
 
@@ -9,7 +9,7 @@ class SColumnDescriptor
     /**
      * @param ReflectionProperty $property
      * @param array<string>|string $column
-     * @param null|callable(mixed...): mixed $deserializer
+     * @param null|(callable(null|scalar ...): object) $deserializer
      */
     public function __construct(
         public readonly ReflectionProperty $property,

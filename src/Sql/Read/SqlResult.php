@@ -39,12 +39,6 @@ class SqlResult implements IteratorAggregate, Countable
         return call_user_func($mapper, $data); // @phpstan-ignore-line
     }
 
-    private function ensureResults(): void {
-        if (is_null($this->data)) {
-            throw new ResultsClosedException();
-        }
-    }
-
     private function close(): void {
         $this->data = null;
         $this->count = 0;
@@ -57,7 +51,9 @@ class SqlResult implements IteratorAggregate, Countable
      * @throws ResultsClosedException
      */
     public function getOne(?callable $mapper=null) {
-        $this->ensureResults();
+        if (is_null($this->data)) {
+            throw new ResultsClosedException();
+        }
 
         foreach($this->data as $item) {
             $result = $this->getMappedValue($item, $mapper);
@@ -74,7 +70,9 @@ class SqlResult implements IteratorAggregate, Countable
      * @throws ResultsClosedException
      */
     public function toArray(?callable $mapper=null): array {
-        $this->ensureResults();
+        if (is_null($this->data)) {
+            throw new ResultsClosedException();
+        }
 
         $result = [];
         /** @var T $value */
@@ -93,7 +91,9 @@ class SqlResult implements IteratorAggregate, Countable
      * @throws ResultsClosedException
      */
     public function toMap(callable $mapper): array {
-        $this->ensureResults();
+        if (is_null($this->data)) {
+            throw new ResultsClosedException();
+        }
 
         $result = [];
         foreach($this->data as $value) {
@@ -116,7 +116,9 @@ class SqlResult implements IteratorAggregate, Countable
      * @throws ResultsClosedException
      */
     public function toGroups(callable $mapper): array {
-        $this->ensureResults();
+        if (is_null($this->data)) {
+            throw new ResultsClosedException();
+        }
 
         $result = [];
         foreach($this->data as $value) {
@@ -138,7 +140,9 @@ class SqlResult implements IteratorAggregate, Countable
      * @throws ResultsClosedException
      */
     public function iterator(?callable $mapper=null) {
-        $this->ensureResults();
+        if (is_null($this->data)) {
+            throw new ResultsClosedException();
+        }
 
         /** @var T $value */
         foreach($this->data as $value) {
@@ -152,7 +156,9 @@ class SqlResult implements IteratorAggregate, Countable
      * @throws ResultsClosedException
      */
     public function getIterator(): Traversable {
-        $this->ensureResults();
+        if (is_null($this->data)) {
+            throw new ResultsClosedException();
+        }
 
         /** @var T $value */
         foreach($this->data as $value) {

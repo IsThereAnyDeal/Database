@@ -1,6 +1,7 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql\Update;
 
+use BackedEnum;
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
 use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
@@ -20,7 +21,7 @@ class SqlUpdateQuery extends SqlQuery {
     }
 
     /**
-     * @param array<string, scalar|scalar> $params
+     * @param array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
      * @return int
      * @throws InvalidParamTypeException
      * @throws MissingParameterException

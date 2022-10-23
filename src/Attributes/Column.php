@@ -2,6 +2,7 @@
 namespace IsThereAnyDeal\Database\Attributes;
 
 use Attribute;
+use BackedEnum;
 use IsThereAnyDeal\Database\Exceptions\InvalidDeserializerException;
 use IsThereAnyDeal\Database\Exceptions\InvalidSerializerException;
 
@@ -10,8 +11,8 @@ class Column
 {
     /**
      * @param null|string|string[] $name
-     * @param string|(callable(mixed...):scalar) $serializer
-     * @param callable(object, string[]): object|scalar $deserializer
+     * @param null|string|(callable(object): null|scalar|BackedEnum|list<null|scalar|BackedEnum>) $serializer
+     * @param null|(callable(null|scalar ...): object) $deserializer
      * @throws InvalidDeserializerException
      * @throws InvalidSerializerException
      */
@@ -26,7 +27,7 @@ class Column
 
         if (!is_null($this->serializer)
             && !is_callable($this->serializer)
-            && !is_string($this->serializer) && $this->serializer[0] != "@"
+            && (!is_string($this->serializer) || $this->serializer[0] != "@")
         ) {
             throw new InvalidSerializerException();
         }

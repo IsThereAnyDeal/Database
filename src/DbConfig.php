@@ -44,38 +44,38 @@ final class DbConfig
     }
 
     public function getDriver(): string {
-        return $this->config->driver;
+        return $this->config->driver; // @phpstan-ignore-line
     }
 
     public function getHost(): string {
-        return $this->config->host;
+        return $this->config->host; // @phpstan-ignore-line
     }
 
     public function getPort(): int {
-        return $this->config->port;
+        return $this->config->port; // @phpstan-ignore-line
     }
 
     public function getPassword(): string {
-        return $this->config->password;
+        return $this->config->password; // @phpstan-ignore-line
     }
 
     public function getDatabase(): string {
-        return $this->config->database;
+        return $this->config->database; // @phpstan-ignore-line
     }
 
     public function getUser(): string {
-        return $this->config->user;
+        return $this->config->user; // @phpstan-ignore-line
     }
 
     public function useCustomUsers(): bool {
-        return $this->config->user_custom;
+        return $this->config->user_custom; // @phpstan-ignore-line
     }
 
     public function getUserPrefix(): string {
-        return $this->config->user_prefix;
+        return $this->config->user_prefix; // @phpstan-ignore-line
     }
 
     public function isProfile(): bool {
-        return $this->config->profiler;
+        return $this->config->profiler; // @phpstan-ignore-line
     }
 }

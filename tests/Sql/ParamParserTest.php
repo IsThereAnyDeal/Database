@@ -4,9 +4,11 @@ namespace IsThereAnyDeal\Database\Tests\Sql;
 use IsThereAnyDeal\Database\Exceptions\InvalidValueCountException;
 use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
 use IsThereAnyDeal\Database\Sql\ParamParser;
+use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EInt;
+use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EString;
 use PHPUnit\Framework\TestCase;
 
-class ParamsTest extends TestCase
+class ParamParserTest extends TestCase
 {
     public function testNoParam(): void {
         $params = new ParamParser("WHERE 1");
@@ -102,5 +104,40 @@ class ParamsTest extends TestCase
 
         $this->assertEquals("WHERE columnA=? AND columnB=? AND columnC=?", $params->getQuery());
         $this->assertEquals(["v1", "v2", "v3"], $params->getValues());
+    }
+
+    public function testEnumParam(): void {
+        $params = new ParamParser("WHERE columnA=:intEnum AND columnB=:strEnum", [
+            ":intEnum" => EInt::Value2,
+            ":strEnum" => EString::ValueC
+        ]);
+
+        $this->assertEquals("WHERE columnA=? AND columnB=?", $params->getQuery());
+        $this->assertEquals([2, "C"], $params->getValues());
+
+        $params = new ParamParser("WHERE columnA IN :intEnum AND columnB IN :strEnum", [
+            ":intEnum" => [EInt::Value2, EInt::Value1],
+            ":strEnum" => [EString::ValueC, EString::ValueA]
+        ]);
+
+        $this->assertEquals("WHERE columnA IN (?,?) AND columnB IN (?,?)", $params->getQuery());
+        $this->assertEquals([2, 1, "C", "A"], $params->getValues());
+    }
+
+    public function testPairParam(): void {
+        $params = new ParamParser("WHERE (columnA, columnB, columnC) IN :pairs(3)", [
+            ":pairs" => [
+                EInt::Value1, EString::ValueC, 500,
+                EInt::Value3, EString::ValueB, 200,
+                EInt::Value2, EString::ValueA, 100,
+            ]
+        ]);
+
+        $this->assertEquals("WHERE (columnA, columnB, columnC) IN ((?,?,?),(?,?,?),(?,?,?))", $params->getQuery());
+        $this->assertEquals([
+            1, "C", 500,
+            3, "B", 200,
+            2, "A", 100
+        ], $params->getValues());
     }
 }

@@ -1,6 +1,7 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql\Update;
 
+use BackedEnum;
 use Ds\Set;
 use IsThereAnyDeal\Database\Data\ValueMapper;
 use IsThereAnyDeal\Database\DbDriver;
@@ -23,7 +24,7 @@ class SqlUpdateObjectQuery extends SqlQuery {
     private Set $whereColumns;
     private ?ParamParser $whereExp = null;
 
-    /** @var array<scalar> */
+    /** @var list<null|scalar> */
     private array $values;
 
     private bool $fullTableUpdate = false;
@@ -53,6 +54,9 @@ class SqlUpdateObjectQuery extends SqlQuery {
     }
 
     /**
+     * @param string $sql
+     * @param array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
+     * @return SqlUpdateObjectQuery
      * @throws MissingParameterException
      * @throws SqlException
      */
@@ -68,7 +72,7 @@ class SqlUpdateObjectQuery extends SqlQuery {
 
     /**
      * @param object $obj
-     * @return array{string, array<scalar>}
+     * @return array{string, list<null|scalar>}
      * @throws \ReflectionException
      * @throws SqlException
      */

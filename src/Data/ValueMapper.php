@@ -1,5 +1,4 @@
 <?php
-
 namespace IsThereAnyDeal\Database\Data;
 
 use BackedEnum;
@@ -9,6 +8,7 @@ use IsThereAnyDeal\Database\Exceptions\InvalidValueTypeException;
 use IsThereAnyDeal\Database\Exceptions\MissingDataException;
 use ReflectionClass;
 
+// TODO better name
 class ValueMapper
 {
     /**
@@ -16,7 +16,7 @@ class ValueMapper
      * @param int $tupleSize
      * @return string
      */
-    public static function getParamTemplate(int $valueCount, int $tupleSize=1): string {
+    public static function getValueTemplate(int $valueCount, int $tupleSize=1): string {
         $template = $tupleSize === 1
             ? "?"
             : "(?".str_repeat(",?", $tupleSize-1).")";
@@ -33,13 +33,13 @@ class ValueMapper
      * @template T of object
      * @param Set<string> $columnSet
      * @param class-string<T>|T $obj
-     * @return callable(T): array<scalar>  Mapper that generates array of scalar values to be used in PDO for queries
+     * @return \Closure(T): list<scalar|null>  Mapper that generates array of scalar values to be used in PDO for queries
      * @throws \ReflectionException
      */
-    public static function getObjectValueMapper(Set $columnSet, string|object $obj) {
+    public static function getObjectValueMapper(Set $columnSet, string|object $obj): mixed {
         $class = new ReflectionClass($obj);
 
-        /** @var array<callable(object): array<string,scalar>> $getters */
+        /** @var list<callable(T): array<string, null|scalar|BackedEnum>> $getters */
         $getters = [];
 
         $props = $class->getProperties();
@@ -71,8 +71,10 @@ class ValueMapper
                 if (!is_null($serializer)) {
                     if (is_string($serializer) && $serializer[0] == "@") {
                         $func = substr($serializer, 1);
+                        // @phpstan-ignore-next-line
                         $getters[] = fn(object $obj) => array_combine($names, call_user_func([$prop->getValue($obj), $func]));
                     } else {
+                        // @phpstan-ignore-next-line
                         $getters[] = fn(object $obj) => array_combine($names, call_user_func($serializer, $prop->getValue($obj)));
                     }
                 }
@@ -84,8 +86,10 @@ class ValueMapper
                 if (!is_null($serializer)) {
                     if (is_string($serializer) && $serializer[0] == "@") {
                         $func = substr($serializer, 1);
+                        // @phpstan-ignore-next-line
                         $getters[] = fn(object $obj) => [$name => call_user_func([$prop->getValue($obj), $func])];
                     } else {
+                        // @phpstan-ignore-next-line
                         $getters[] = fn(object $obj) => [$name => call_user_func($serializer, $prop->getValue($obj))];
                     }
                 } else {
@@ -95,7 +99,9 @@ class ValueMapper
         }
 
         return function(object $obj) use($columnSet, $getters) {
-            $data = array_merge(...array_map(fn($getter) => call_user_func($getter, $obj), $getters));
+            /** @var list<array<string, null|scalar|BackedEnum>> $values */
+            $values = array_map(fn($getter) => call_user_func($getter, $obj), $getters);
+            $data = array_merge(...$values);
 
             $result = [];
             foreach($columnSet as $column) {

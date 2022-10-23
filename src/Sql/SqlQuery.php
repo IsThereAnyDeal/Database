@@ -34,6 +34,12 @@ abstract class SqlQuery {
         }
     }
 
+    /**
+     * @param string $query
+     * @param list<null|scalar> $values
+     * @return PDOStatement
+     * @throws InvalidParamTypeException
+     */
     protected function prepare(string $query, array $values): PDOStatement {
 
         /**
@@ -63,7 +69,6 @@ abstract class SqlQuery {
     }
 
     /**
-     * @param array|null $input
      * @throws SqlException
      */
     protected function execute(PDOStatement $statement): void {

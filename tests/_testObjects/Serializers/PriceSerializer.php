@@ -14,9 +14,7 @@ class PriceSerializer
         ];
     }
 
-    public static function deserializePrice(object $row, array $names) {
-        $amount = $row->{$names[0]};
-        $currency = $row->{$names[1]};
+    public static function deserializePrice(int $amount, string $currency) {
         return new Price($amount, new Currency($currency));
     }
 }
