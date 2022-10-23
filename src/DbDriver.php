@@ -3,6 +3,13 @@ namespace IsThereAnyDeal\Database;
 
 use IsThereAnyDeal\Database\Data\ObjectBuilder;
 use IsThereAnyDeal\Database\Enums\EInnoDbIsolationLevel;
+use IsThereAnyDeal\Database\Sql\Create\SqlInsertQuery;
+use IsThereAnyDeal\Database\Sql\Create\SqlReplaceQuery;
+use IsThereAnyDeal\Database\Sql\Delete\SqlDeleteQuery;
+use IsThereAnyDeal\Database\Sql\Read\SqlSelectQuery;
+use IsThereAnyDeal\Database\Sql\Update\SqlUpdateObjectQuery;
+use IsThereAnyDeal\Database\Sql\Update\SqlUpdateQuery;
+use IsThereAnyDeal\Database\Tables\Table;
 use Psr\Log\LoggerInterface;
 
 class DbDriver
@@ -60,5 +67,37 @@ class DbDriver
     public function setProfile(bool $profile): self {
         $this->profile = $profile;
         return $this;
+    }
+
+    public function select(string $query): SqlSelectQuery {
+        return new SqlSelectQuery($this, $query);
+    }
+
+    public function update(string $query): SqlUpdateQuery {
+        return new SqlUpdateQuery($this, $query);
+    }
+
+    public function updateObj(Table $table): SqlUpdateObjectQuery {
+        return new SqlUpdateObjectQuery($this, $table);
+    }
+
+    /**
+     * @param Table $table
+     * @return SqlInsertQuery
+     */
+    public function insert(Table $table): SqlInsertQuery {
+        return new SqlInsertQuery($this, $table);
+    }
+
+    /**
+     * @param Table $table
+     * @return SqlReplaceQuery<object>
+     */
+    public function replace(Table $table): SqlReplaceQuery {
+        return new SqlReplaceQuery($this, $table);
+    }
+
+    public function delete(string $query): SqlDeleteQuery {
+        return new SqlDeleteQuery($this, $query);
     }
 }
