@@ -62,7 +62,7 @@ abstract class Table
     }
 
     final public function __toString(): string {
-        return $this->tbl_name
+        return "`{$this->tbl_name}`"
             .(empty($this->tbl_alias) ? "" : " as `{$this->tbl_alias}`");
     }
 }
