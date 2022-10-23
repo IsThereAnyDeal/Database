@@ -1,5 +1,5 @@
 <?php
-namespace IsThereAnyDeal\Database;
+namespace IsThereAnyDeal\Database\Enums;
 
 class EIsolationLevel
 {
