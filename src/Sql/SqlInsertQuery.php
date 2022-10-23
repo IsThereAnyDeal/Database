@@ -12,7 +12,7 @@ class SqlInsertQuery extends SqlQuery {
 
     private Table $table;
     private bool $ignore = false;
-    private bool $replace = false;
+    protected bool $replace = false;
 
     /** @var Set<string> */
     private Set $columns;
@@ -96,22 +96,24 @@ class SqlInsertQuery extends SqlQuery {
             : "INSERT";
 
         if ($this->ignore) {
-            $ignore = "IGNORE";
+            $ignore = " IGNORE";
         }
 
         if (count($this->updateColumns) > 0 || count($this->updateExpressions) > 0) {
-            $update = "ON DUPLICATE KEY UPDATE";
+            $update = "\nON DUPLICATE KEY UPDATE ";
+
+            $updateColumns = [];
             if (count($this->updateColumns) > 0) {
-                $update .= " ".implode(", ",
-                        array_map(fn(string $c) => "`{$c}`=VALUES(`$c`)", $this->updateColumns)
-                    );
+                $updateColumns = array_map(fn(string $c) => "`{$c}`=VALUES(`$c`)", $this->updateColumns);
             }
             if (count($this->updateExpressions) > 0) {
-                $update .= " ".implode(", ",
-                        /** @var array{string, string} $s */
-                        array_map(fn(array $s) => "`{$s[0]}`={$s[1]}", $this->updateExpressions)
-                    );
+                $updateColumns = array_merge(
+                    $updateColumns,
+                    /** @var array{string, string} $s */
+                    array_map(fn(array $s) => "`{$s[0]}`={$s[1]}", $this->updateExpressions)
+                );
             }
+            $update .= implode(",", $updateColumns);
         }
 
         $columns = "`".implode("`,`", $this->columns->toArray())."`";
@@ -119,14 +121,10 @@ class SqlInsertQuery extends SqlQuery {
         $valueListTemplate = ValueMapper::getParamTemplate(count($this->columns));
         $values = $valueListTemplate.str_repeat(",\n{$valueListTemplate}", $this->currentStacked-1);
 
-        return <<<SQL
-            {$action} {$ignore} INTO {$this->table->getName()} ({$columns})
-            VALUES {$values}
-            {$update}
-            SQL;
+        return "{$action}{$ignore} INTO `{$this->table->getName()}` ({$columns})\nVALUES {$values}{$update}";
     }
 
-    final public function persist(?IInsertable $obj=null): static {
+    final public function persist(?object $obj=null): static {
         if (count($this->values) == 0 && is_null($obj)) {
             return $this;
         }
