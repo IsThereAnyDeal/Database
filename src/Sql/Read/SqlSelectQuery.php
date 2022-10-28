@@ -4,6 +4,7 @@ namespace IsThereAnyDeal\Database\Sql\Read;
 use BackedEnum;
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
+use IsThereAnyDeal\Database\Exceptions\InvalidValueTypeException;
 use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
 use IsThereAnyDeal\Database\Exceptions\SqlException;
 use IsThereAnyDeal\Database\Sql\ParamParser;
@@ -76,7 +77,7 @@ class SqlSelectQuery extends SqlQuery {
      * @throws SqlException
      * @throws InvalidParamTypeException
      */
-    final public function fetchValue(?array $params=null) {
+    final public function fetchValue(?array $params=null): mixed {
         if (!is_null($params)) {
             $this->params($params);
         }
@@ -87,6 +88,38 @@ class SqlSelectQuery extends SqlQuery {
 
         $result = $statement->fetch();
         return $result === false ? null : $result[0]; // @phpstan-ignore-line
+    }
+
+    /**
+     * @param ?array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
+     * @return null|string
+     * @throws InvalidParamTypeException
+     * @throws InvalidValueTypeException
+     * @throws MissingParameterException
+     * @throws SqlException
+     */
+    final public function fetchString(?array $params=null): ?string {
+        $result = $this->fetchValue($params);
+        if (is_null($result) || is_string($result)) {
+            return $result;
+        }
+        throw new InvalidValueTypeException();
+    }
+
+    /**
+     * @param ?array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
+     * @return null|int
+     * @throws InvalidParamTypeException
+     * @throws InvalidValueTypeException
+     * @throws MissingParameterException
+     * @throws SqlException
+     */
+    final public function fetchInt(?array $params=null): ?int {
+        $result = $this->fetchValue($params);
+        if (is_null($result) || is_int($result)) {
+            return $result;
+        }
+        throw new InvalidValueTypeException();
     }
 
     /**

@@ -29,7 +29,7 @@ class SqlResult implements IteratorAggregate, Countable
      * @template TMapped
      * @param T $data
      * @param null|callable(T): TMapped $mapper
-     * @return T|TMapped
+     * @return ($mapper is null ? T : TMapped)
      */
     private function getMappedValue(mixed $data, ?callable $mapper=null): mixed {
         if (is_null($mapper)) {
@@ -47,10 +47,10 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template TMapped
      * @param null|callable(T): TMapped $mapper
-     * @return null|T|TMapped
+     * @return ($mapper is null ? null|T : TMapped)
      * @throws ResultsClosedException
      */
-    public function getOne(?callable $mapper=null) {
+    public function getOne(?callable $mapper=null): mixed {
         if (is_null($this->data)) {
             throw new ResultsClosedException();
         }
@@ -66,7 +66,7 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template TMapped
      * @param null|callable(T): TMapped $mapper
-     * @return array<T|TMapped>
+     * @return array<($mapper is null ? T : TMapped)>
      * @throws ResultsClosedException
      */
     public function toArray(?callable $mapper=null): array {
@@ -136,7 +136,7 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template TMapped
      * @param null|callable(T): TMapped $mapper
-     * @return Traversable<T|TMapped>
+     * @return Traversable<($mapper is null ? null|T : TMapped)>
      * @throws ResultsClosedException
      */
     public function iterator(?callable $mapper=null) {
