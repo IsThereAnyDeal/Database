@@ -95,10 +95,10 @@ class ValueMapper
                                 }
                             };
                         } else {
-                            throw new InvalidSerializerException("Can't use instance method from class {$className} to serialize {$prop->getType()}");
+                            throw new InvalidSerializerException();
                         }
                     } else {
-                        throw new InvalidSerializerException("Invalid serializer definition");
+                        throw new InvalidSerializerException();
                     }
                 } else {
                     $getters[] = function(object $obj) use($name, $serializer, $prop) {

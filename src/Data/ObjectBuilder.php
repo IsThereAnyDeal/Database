@@ -10,6 +10,7 @@ use IsThereAnyDeal\Database\Data\Structs\SClassDescriptor;
 use IsThereAnyDeal\Database\Data\Structs\SColumnDescriptor;
 use IsThereAnyDeal\Database\Data\Structs\SColumnRecipe;
 use IsThereAnyDeal\Database\Enums\EConstructionType;
+use IsThereAnyDeal\Database\Exceptions\InvalidDeserializerException;
 use ReflectionClass;
 use ReflectionException;
 
@@ -98,6 +99,7 @@ class ObjectBuilder
      * @param array<SColumnDescriptor> $properties
      * @param Set<string> $dataset
      * @return list<SColumnRecipe>
+     * @throws InvalidDeserializerException
      */
     private function getRecipe(array $properties, Set $dataset): array {
 
@@ -130,13 +132,33 @@ class ObjectBuilder
                     continue;
                 }
 
-                if (is_callable($cp->deserializer)) {
-                    $valueSetter = fn(object $o) => ($cp->deserializer)($o->{$dbColumn});
+                if (!is_null($cp->deserializer)) {
+                    if (is_callable($cp->deserializer)) {
+                        $valueSetter = fn(object $o) => ($cp->deserializer)($o->{$dbColumn});
 
-                    $nullable = $cp->property->getType()?->allowsNull();
-                    $setter = $nullable
-                        ? (fn(object $o) => is_null($o->{$dbColumn}) ? null : $valueSetter)
-                        : $valueSetter;
+                        $nullable = $cp->property->getType()?->allowsNull();
+                        $setter = $nullable
+                            ? (fn(object $o) => is_null($o->{$dbColumn}) ? null : $valueSetter)
+                            : $valueSetter;
+                    } elseif (is_array($cp->deserializer) && count($cp->deserializer) == 2) {
+                        list($className, $method) = $cp->deserializer;
+
+                        if ($cp->property->getType() instanceof \ReflectionNamedType
+                         && $cp->property->getType()->getName() == $className
+                         && is_string($method)
+                        ) {
+                            $setter = function(object $o) use($className, $method, $dbColumn) {
+                                $value = $o->{$dbColumn};
+                                return is_null($value)
+                                    ? null
+                                    : (new $className())->$method($value);
+                            };
+                        } else {
+                            throw new InvalidDeserializerException();
+                        }
+                    } else {
+                        throw new InvalidDeserializerException();
+                    }
                 } else {
                     $setter = $dbColumn;
                 }

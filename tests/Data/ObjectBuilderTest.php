@@ -14,6 +14,7 @@ use IsThereAnyDeal\Database\Tests\_testObjects\Enum\ESize;
 use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EType;
 use IsThereAnyDeal\Database\Tests\_testObjects\Serializers\SimpleSerializedDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\Values\Currency;
+use IsThereAnyDeal\Database\Tests\_testObjects\Values\SerializableList;
 use PHPUnit\Framework\TestCase;
 
 class ObjectBuilderTest extends TestCase
@@ -231,5 +232,30 @@ class ObjectBuilderTest extends TestCase
             $this->assertEquals($data[$i]->title, $item->title);
             ++$i;
         }
+    }
+
+    public function testInstanceMethodDeserialization(): void {
+        $data = new \ArrayIterator([
+            (object)["list" => "1,3,5,9"],
+            (object)["list" => null],
+            (object)["list" => ""]
+        ]);
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(new class{
+            #[Column(deserializer: [SerializableList::class, "fromString"])]
+            public ?SerializableList $list;
+        }, $data);
+
+        $item = $items->current();
+        $this->assertEquals([1, 3, 5, 9], $item->list?->getValues());
+        $items->next();
+
+        $item = $items->current();
+        $this->assertEquals(null, $item->list?->getValues());
+        $items->next();
+
+        $item = $items->current();
+        $this->assertEquals([], $item->list?->getValues());
     }
 }
