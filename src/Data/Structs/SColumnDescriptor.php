@@ -9,7 +9,7 @@ class SColumnDescriptor
     /**
      * @param ReflectionProperty $property
      * @param array<string>|string $column
-     * @param null|(callable(null|scalar ...): object) $deserializer
+     * @param null|(callable(null|scalar ...): (null|object)) $deserializer
      */
     public function __construct(
         public readonly ReflectionProperty $property,

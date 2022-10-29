@@ -211,4 +211,25 @@ class ObjectBuilderTest extends TestCase
             ++$i;
         }
     }
+
+    public function testNullDeserialization(): void {
+
+        $data = new \ArrayIterator([
+            (object)["price" => 2999, "currency" => "EUR", "sale" => null, "title" => null],
+            (object)["price" => 2999, "currency" => "EUR", "sale" => 1499, "title" => "Test Title"],
+        ]);
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(ComplexSerializedDTO::class, $data);
+
+        $i = 0;
+        foreach($items as $item) {
+            $this->assertInstanceOf(ComplexSerializedDTO::class, $item);
+            $this->assertEquals($data[$i]->price, $item->price->amount);
+            $this->assertEquals($data[$i]->currency, $item->price->currency->code);
+            $this->assertEquals($data[$i]->sale, $item->sale?->amount);
+            $this->assertEquals($data[$i]->title, $item->title);
+            ++$i;
+        }
+    }
 }

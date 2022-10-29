@@ -110,10 +110,19 @@ class ObjectBuilder
                     continue;
                 }
 
-                $setter = fn(object $o) => call_user_func_array(
+                $valueSetter = fn(object $o) => call_user_func_array(
                     $cp->deserializer, // @phpstan-ignore-line
                     array_map(fn($prop) => $o->{$prop}, $dbColumns)
                 );
+
+                $nullable = $cp->property->getType()?->allowsNull();
+                if ($nullable) {
+                    $setter = fn(object $o) => count(array_filter($dbColumns, fn($prop) => is_null($o->{$prop}))) > 0
+                        ? null
+                        : ($valueSetter)($o);
+                } else {
+                    $setter = $valueSetter;
+                }
             } else {
                 $dbColumn = $cp->column;
 
@@ -121,9 +130,16 @@ class ObjectBuilder
                     continue;
                 }
 
-                $setter = is_callable($cp->deserializer)
-                    ? fn(object $o) => call_user_func($cp->deserializer, $o->{$dbColumn})
-                    : $dbColumn;
+                if (is_callable($cp->deserializer)) {
+                    $valueSetter = fn(object $o) => ($cp->deserializer)($o->{$dbColumn});
+
+                    $nullable = $cp->property->getType()?->allowsNull();
+                    $setter = $nullable
+                        ? (fn(object $o) => is_null($o->{$dbColumn}) ? null : $valueSetter)
+                        : $valueSetter;
+                } else {
+                    $setter = $dbColumn;
+                }
             }
 
             $recipe[] = new SColumnRecipe($cp->property, $setter); // @phpstan-ignore-line
@@ -168,7 +184,8 @@ class ObjectBuilder
 
             /** @var list<SColumnRecipe> $recipe */
             foreach($recipe as $item) {
-                $item->property->setValue($instance, is_string($item->setter)
+                $item->property->setValue($instance,
+                    is_string($item->setter)
                     ? $row->{$item->setter}
                     : call_user_func($item->setter, $row));
             }

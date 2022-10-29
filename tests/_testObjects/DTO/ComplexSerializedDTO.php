@@ -18,7 +18,9 @@ class ComplexSerializedDTO
     public int $priceAmount;
 
     #[Column(["sale", "currency"], deserializer: [PriceSerializer::class, "deserializePrice"])]
-    public Price $sale;
+    public ?Price $sale;
+
+    public ?string $title;
 
     public function __construct(?int $customRate = null, ?Currency $currency = null) {
         if (!is_null($customRate)) {

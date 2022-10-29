@@ -4,6 +4,7 @@ namespace IsThereAnyDeal\Database\Data;
 use BackedEnum;
 use Ds\Set;
 use IsThereAnyDeal\Database\Attributes\Column;
+use IsThereAnyDeal\Database\Exceptions\InvalidSerializerException;
 use IsThereAnyDeal\Database\Exceptions\InvalidValueTypeException;
 use IsThereAnyDeal\Database\Exceptions\MissingDataException;
 use ReflectionClass;
@@ -56,9 +57,8 @@ class ValueMapper
             $serializer = $column?->serializer;
 
             if (is_array($name)) {
-                $names = $name;
                 $inResultSet = false;
-                foreach($names as $n) {
+                foreach($name as $n) {
                     if ($columnSet->contains($n)) {
                         $inResultSet = true;
                         break;
@@ -67,31 +67,59 @@ class ValueMapper
                 if (!$inResultSet) {
                     continue;
                 }
+            } elseif (!$columnSet->contains($name)) {
+                continue;
+            }
 
-                if (!is_null($serializer)) {
-                    if (is_string($serializer) && $serializer[0] == "@") {
-                        $func = substr($serializer, 1);
-                        // @phpstan-ignore-next-line
-                        $getters[] = fn(object $obj) => array_combine($names, call_user_func([$prop->getValue($obj), $func]));
+            if (!is_null($serializer)) {
+                if (!is_callable($serializer)) {
+                    if (is_array($serializer) && count($serializer) == 2) {
+                        list($className, $method) = $serializer;
+                        if ($prop->getType() instanceof \ReflectionNamedType
+                         && $prop->getType()->getName() === $className
+                         && is_string($method))
+                        {
+                            $getters[] = function(object $obj) use($name, $prop, $method) {
+                                $value = $prop->getValue($obj);
+
+                                if (is_array($name)) {
+                                    return is_null($value)
+                                        ? array_combine($name, array_fill(0, count($name), null))
+                                        : array_combine($name, $value->$method());
+                                } else {
+                                    return [
+                                        $name => is_null($value)
+                                            ? null
+                                            : $value->$method()
+                                    ];
+                                }
+                            };
+                        } else {
+                            throw new InvalidSerializerException("Can't use instance method from class {$className} to serialize {$prop->getType()}");
+                        }
                     } else {
-                        // @phpstan-ignore-next-line
-                        $getters[] = fn(object $obj) => array_combine($names, call_user_func($serializer, $prop->getValue($obj)));
+                        throw new InvalidSerializerException("Invalid serializer definition");
                     }
+                } else {
+                    $getters[] = function(object $obj) use($name, $serializer, $prop) {
+                        $value = $prop->getValue($obj);
+
+                        if (is_array($name)) {
+                            return is_null($value)
+                                ? array_combine($name, array_fill(0, count($name), null))
+                                : array_combine($name, $serializer($value)); // @phpstan-ignore-line
+                        } else {
+                            return [
+                                $name => is_null($value)
+                                    ? null
+                                    : $serializer($value)
+                            ];
+                        }
+                    };
                 }
             } else {
-                if (!$columnSet->contains($name)) {
-                    continue;
-                }
-
-                if (!is_null($serializer)) {
-                    if (is_string($serializer) && $serializer[0] == "@") {
-                        $func = substr($serializer, 1);
-                        // @phpstan-ignore-next-line
-                        $getters[] = fn(object $obj) => [$name => call_user_func([$prop->getValue($obj), $func])];
-                    } else {
-                        // @phpstan-ignore-next-line
-                        $getters[] = fn(object $obj) => [$name => call_user_func($serializer, $prop->getValue($obj))];
-                    }
+                if (is_array($name)) {
+                    throw new InvalidSerializerException("Missing serializer for multi-column property");
                 } else {
                     $getters[] = fn(object $obj) => [$name => $prop->getValue($obj)];
                 }

@@ -4,6 +4,7 @@ namespace IsThereAnyDeal\Database\Tests\Data;
 use Ds\Set;
 use IsThereAnyDeal\Database\Attributes\Column;
 use IsThereAnyDeal\Database\Data\ValueMapper;
+use IsThereAnyDeal\Database\Exceptions\InvalidSerializerException;
 use IsThereAnyDeal\Database\Exceptions\InvalidValueTypeException;
 use IsThereAnyDeal\Database\Exceptions\MissingDataException;
 use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EInt;
@@ -52,10 +53,10 @@ class ValueMapperTest extends TestCase
             #[Column(["c1", "c2"], serializer: [ValueMapperTest::class, "sampleArraySerializer"])]
             public array $serializable = [1, "A"];
 
-            #[Column(serializer: "@serialize")]
+            #[Column(serializer: [EUnit::class, "serialize"])]
             public EUnit $enum1 = EUnit::SecondValue;
 
-            #[Column(["c4", "c5"], "@serializePair")]
+            #[Column(["c4", "c5"], [EUnit::class, "serializePair"])]
             public EUnit $enum2 = EUnit::FirstValue;
 
             #[Column("c6", [EUnit::class, "staticSerialize"])]
@@ -126,6 +127,19 @@ class ValueMapperTest extends TestCase
         call_user_func($mapper, $obj);
     }
 
+    public function testInvalidSerializer(): void {
+
+        $obj = new class {
+            #[Column(serializer: [EUnit::class, "serialize"])]
+            public EString $prop = EString::ValueC;
+        };
+
+        $columns = new Set(["prop"]);
+
+        $this->expectException(InvalidSerializerException::class);
+        ValueMapper::getObjectValueMapper($columns, $obj);
+    }
+
     public function testMissingData(): void {
 
         $obj = new class{
@@ -157,5 +171,24 @@ class ValueMapperTest extends TestCase
 
         $values = call_user_func($mapper, $obj);
         $this->assertEquals([3], $values);
+    }
+
+    public function testNullValues(): void {
+
+        $obj = new class {
+            #[Column(["c1", "c2"], serializer: [ValueMapperTest::class, "sampleArraySerializer"])]
+            public ?array $serializable = null;
+
+            #[Column(serializer: [EUnit::class, "serialize"])]
+            public ?EUnit $unit = null;
+
+            public ?string $title = "abc";
+        };
+
+        $columns = new Set(["title", "c1", "c2", "unit"]);
+        $mapper = ValueMapper::getObjectValueMapper($columns, $obj);
+
+        $values = call_user_func($mapper, $obj);
+        $this->assertEquals(["abc", null, null, null], $values);
     }
 }
