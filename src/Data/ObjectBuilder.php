@@ -161,6 +161,20 @@ class ObjectBuilder
                     }
                 } else {
                     $setter = $dbColumn;
+                    if ($cp->property->getType() instanceof \ReflectionNamedType) {
+                        /** @var \ReflectionNamedType $type */
+                        $type = $cp->property->getType();
+
+                        if (is_subclass_of($type->getName(), \BackedEnum::class)) {
+                            $typeName = $type->getName();
+
+                            if ($type->allowsNull()) {
+                                $setter = fn(object $o) => ($typeName)::tryFrom($o->{$dbColumn});
+                            } else {
+                                $setter = fn(object $o) => ($typeName)::from($o->{$dbColumn});
+                            }
+                        }
+                    }
                 }
             }
 

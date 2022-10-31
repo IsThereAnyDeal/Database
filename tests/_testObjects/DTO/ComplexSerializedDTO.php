@@ -4,6 +4,8 @@ namespace IsThereAnyDeal\Database\Tests\_testObjects\DTO;
 use IsThereAnyDeal\Database\Attributes\Column;
 use IsThereAnyDeal\Database\Attributes\Construction;
 use IsThereAnyDeal\Database\Enums\EConstructionType;
+use IsThereAnyDeal\Database\Tests\_testObjects\Enum\ESize;
+use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EString;
 use IsThereAnyDeal\Database\Tests\_testObjects\Values\Currency;
 use IsThereAnyDeal\Database\Tests\_testObjects\Values\Price;
 use IsThereAnyDeal\Database\Tests\_testObjects\Serializers\PriceSerializer;
@@ -21,6 +23,9 @@ class ComplexSerializedDTO
     public ?Price $sale;
 
     public ?string $title;
+
+    public EString $enum;
+    public ?ESize $nullableEnum;
 
     public function __construct(?int $customRate = null, ?Currency $currency = null) {
         if (!is_null($customRate)) {

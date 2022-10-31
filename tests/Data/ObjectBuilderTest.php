@@ -11,6 +11,7 @@ use IsThereAnyDeal\Database\Tests\_testObjects\DTO\ConstructorPreFetchDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\DTO\MappedDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\DTO\SimpleDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\Enum\ESize;
+use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EString;
 use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EType;
 use IsThereAnyDeal\Database\Tests\_testObjects\Serializers\SimpleSerializedDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\Values\Currency;
@@ -90,22 +91,30 @@ class ObjectBuilderTest extends TestCase
     public function testComplexDeserializetion(): void {
 
         $data = new \ArrayIterator([
-            (object)["price" => 1999, "currency" => "USD"],
-            (object)["price" => 2795, "currency" => "EUR"],
+            (object)["price" => 1999, "currency" => "USD", "enum" => "A", "nullableEnum" => 10],
+            (object)["price" => 2795, "currency" => "EUR", "enum" => "C", "nullableEnum" => null],
         ]);
 
         $builder = new ObjectBuilder();
         $items = $builder->build(ComplexSerializedDTO::class, $data);
 
-        $i = 0;
-        foreach($items as $item) {
-            $this->assertInstanceOf(ComplexSerializedDTO::class, $item);
-            $this->assertEquals($data[$i]->price, $item->priceAmount);
-            $this->assertEquals($data[$i]->price, $item->price->amount);
-            $this->assertEquals($data[$i]->currency, $item->price->currency->code);
-            $this->assertFalse(isset($item->sale));
-            ++$i;
-        }
+        $item = $items->current();
+        $this->assertInstanceOf(ComplexSerializedDTO::class, $item);
+        $this->assertEquals(1999, $item->priceAmount);
+        $this->assertEquals(1999, $item->price->amount);
+        $this->assertEquals("USD", $item->price->currency->code);
+        $this->assertFalse(isset($item->sale));
+        $this->assertEquals(EString::ValueA, $item->enum);
+        $this->assertEquals(ESize::Size10, $item->nullableEnum);;
+        $items->next();
+
+        $item = $items->current();
+        $this->assertEquals(2795, $item->priceAmount);
+        $this->assertEquals(2795, $item->price->amount);
+        $this->assertEquals("EUR", $item->price->currency->code);
+        $this->assertFalse(isset($item->sale));
+        $this->assertEquals(EString::ValueC, $item->enum);
+        $this->assertEquals(null, $item->nullableEnum);;
     }
 
     public function testPreFetchConstructor(): void {
