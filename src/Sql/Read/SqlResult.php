@@ -36,7 +36,7 @@ class SqlResult implements IteratorAggregate, Countable
             return $data;
         }
 
-        return call_user_func($mapper, $data); // @phpstan-ignore-line
+        return call_user_func($mapper, $data);
     }
 
     private function close(): void {
@@ -47,7 +47,7 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template TMapped
      * @param null|callable(T): TMapped $mapper
-     * @return ($mapper is null ? null|T : TMapped)
+     * @return null|($mapper is null ? T : TMapped)
      * @throws ResultsClosedException
      */
     public function getOne(?callable $mapper=null): mixed {
