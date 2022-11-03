@@ -3,6 +3,7 @@ namespace IsThereAnyDeal\Database\Tests\Data;
 
 use IsThereAnyDeal\Database\Attributes\Column;
 use IsThereAnyDeal\Database\Data\ObjectBuilder;
+use IsThereAnyDeal\Database\Tests\_testObjects\DTO\ChildDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\DTO\ComplexSerializedDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\DTO\ConstructorBaseDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\DTO\ConstructorNoneDTO;
@@ -266,5 +267,19 @@ class ObjectBuilderTest extends TestCase
 
         $item = $items->current();
         $this->assertEquals([], $item->list?->getValues());
+    }
+
+    public function testInheritance(): void {
+        $data = new \ArrayIterator([
+            (object)["id" => 1, "title" => "Title A", "timestamp" => 100]
+        ]);
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(ChildDTO::class, $data, 0);
+
+        $item = $items->current();
+        $this->assertEquals(0, $item->getId());
+        $this->assertEquals("Title A", $item->getTitle());
+        $this->assertEquals(100, $item->getTimestamp());
     }
 }
