@@ -215,4 +215,58 @@ class SqlInsertQueryTest extends TestCase
             ->onDuplicateKeyExpression($t->c, "{$t->a->name} + {$t->b->name}")
             ->persist(SimpleTable::getDTO(101, 102));
     }
+
+    public function testInsertSelect(): void {
+        $t = new SimpleTable();
+        $t2 = new SimpleTable();
+
+        $statementMock = $this->createMock(PDOStatement::class);
+
+        $statementMock->expects($this->exactly(2))
+            ->method("bindValue")
+            ->withConsecutive(
+                [1, "C", PDO::PARAM_STR],
+                [2, "B", PDO::PARAM_STR]
+            );
+
+        $statementMock->expects($this->exactly(1))
+            ->method("execute")
+            ->willReturn(true);
+
+        $this->pdoMock->expects($this->once())
+            ->method("prepare")
+            ->with("INSERT INTO `tbl` (`a`,`b`)\n"
+                ."SELECT t2.`a`, t2.`b` FROM `tbl` as `t2` WHERE t2.`c`=? AND t2.`b`=?"
+            )->willReturn($statementMock);
+
+        (new SqlInsertQuery($this->driverMock, $t))
+            ->columns($t->a, $t->b)
+            ->select("SELECT $t2->a, $t2->b FROM $t2 WHERE $t2->c=:c AND $t2->b=:b")
+            ->persist([
+                ":b" => "B",
+                ":c" => "C"
+            ]);
+    }
+
+    public function testPersistParam1(): void {
+        $t = new SimpleTable();
+        $t2 = new SimpleTable();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new SqlInsertQuery($this->driverMock, $t))
+            ->columns($t->a, $t->b)
+            ->select("SELECT $t2->a, $t2->b FROM $t2")
+            ->persist(SimpleTable::getDTO(101, 102));
+    }
+
+    public function testPersistParam2(): void {
+        $t = new SimpleTable();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new SqlInsertQuery($this->driverMock, $t))
+            ->columns($t->a, $t->b)
+            ->persist([":a" => "A"]);
+    }
 }

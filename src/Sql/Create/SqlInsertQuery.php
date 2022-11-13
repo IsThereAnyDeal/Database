@@ -1,12 +1,14 @@
 <?php
 namespace IsThereAnyDeal\Database\Sql\Create;
 
+use BackedEnum;
 use Ds\Set;
 use Ds\Vector;
 use IsThereAnyDeal\Database\Data\ValueMapper;
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
 use IsThereAnyDeal\Database\Exceptions\SqlException;
+use IsThereAnyDeal\Database\Sql\ParamParser;
 use IsThereAnyDeal\Database\Sql\SqlQuery;
 use IsThereAnyDeal\Database\Tables\Column;
 use IsThereAnyDeal\Database\Tables\Table;
@@ -22,6 +24,8 @@ class SqlInsertQuery extends SqlQuery {
 
     /** @var Set<string> */
     private Set $columns;
+
+    private ?string $selectQuery = null;
 
     /** @var array<string> */
     private array $updateColumns = [];
@@ -69,6 +73,14 @@ class SqlInsertQuery extends SqlQuery {
         return $this;
     }
 
+    /**
+     * @param non-empty-string $query
+     */
+    final public function select(string $query): static {
+        $this->selectQuery = $query;
+        return $this;
+    }
+
     final public function onDuplicateKeyUpdate(Column ...$columns): static {
         $this->updateColumns = array_map(fn(Column $c) => $c->name, $columns);
         return $this;
@@ -85,6 +97,10 @@ class SqlInsertQuery extends SqlQuery {
      * @throws \ReflectionException
      */
     final public function stack(object $obj): static {
+        if (!is_null($this->selectQuery)) {
+            throw new \LogicException("Can't store object with INSERT SELECT query");
+        }
+
         if (is_null($this->valueMapper)) {
             $this->valueMapper = ValueMapper::getObjectValueMapper($this->columns, $obj);
         }
@@ -100,7 +116,10 @@ class SqlInsertQuery extends SqlQuery {
         return $this;
     }
 
-    private function buildQuery(): string {
+    /**
+     * @param array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
+     */
+    private function buildQuery(array $params=[]): string {
         $ignore = "";
         $update = "";
 
@@ -131,29 +150,50 @@ class SqlInsertQuery extends SqlQuery {
 
         $columns = "`".implode("`,`", $this->columns->toArray())."`";
 
-        $valueListTemplate = ValueMapper::getValueTemplate(count($this->columns));
-        $values = $valueListTemplate.str_repeat(",\n{$valueListTemplate}", $this->currentStacked-1);
+        if (is_null($this->selectQuery)) {
+            $valueListTemplate = ValueMapper::getValueTemplate(count($this->columns));
+            $values = $valueListTemplate.str_repeat(",\n{$valueListTemplate}", $this->currentStacked-1);
+            $valuesSql = "VALUES {$values}";
+        } else {
+            $parser = new ParamParser(preg_replace("#^SELECT\s+#i", "", $this->selectQuery), $params);
+            $valuesSql = "SELECT ".$parser->getQuery();
+            $this->values->clear();
+            $this->values->push(...$parser->getValues());
+        }
 
-        return "{$action}{$ignore} INTO `{$this->table->getName()}` ({$columns})\nVALUES {$values}{$update}";
+        return "{$action}{$ignore} INTO `{$this->table->getName()}` ({$columns})\n{$valuesSql}{$update}";
     }
 
     /**
-     * @param T|null $obj
+     * @param null|T|array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $objOrParams
      * @return static
      * @throws InvalidParamTypeException
      * @throws SqlException
      * @throws \ReflectionException
      */
-    final public function persist(?object $obj=null): static {
-        if (count($this->values) == 0 && is_null($obj)) {
+    final public function persist(null|object|array $objOrParams=null): static {
+        if (is_null($this->selectQuery) && count($this->values) == 0 && is_null($objOrParams)) {
             return $this;
         }
 
-        if (!is_null($obj)) {
-            $this->stack($obj);
+        $params = [];
+        if (!is_null($objOrParams)) {
+            if (is_null($this->selectQuery)) {
+                if (!is_object($objOrParams)) {
+                    throw new \InvalidArgumentException();
+                }
+
+                $this->stack($objOrParams);
+            } else {
+                if (!is_array($objOrParams)) {
+                    throw new \InvalidArgumentException();
+                }
+
+                $params = $objOrParams;
+            }
         }
 
-        $statement = $this->prepare($this->buildQuery(), $this->values->toArray());
+        $statement = $this->prepare($this->buildQuery($params), $this->values->toArray());
         $this->execute($statement);
         $this->insertedId = $this->getLastInsertedId();
         $this->insertedRowCount += $statement->rowCount();
