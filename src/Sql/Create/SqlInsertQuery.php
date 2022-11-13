@@ -193,10 +193,15 @@ class SqlInsertQuery extends SqlQuery {
             }
         }
 
-        $statement = $this->prepare($this->buildQuery($params), $this->values->toArray());
-        $this->execute($statement);
-        $this->insertedId = $this->getLastInsertedId();
-        $this->insertedRowCount += $statement->rowCount();
+        try {
+            $statement = $this->prepare($this->buildQuery($params), $this->values->toArray());
+            $this->execute($statement);
+            $this->insertedId = $this->getLastInsertedId();
+            $this->insertedRowCount += $statement->rowCount();
+        } catch (\PDOException $e) {
+            $this->clear();
+            throw $e;
+        }
         $this->clear();
 
         return $this;
