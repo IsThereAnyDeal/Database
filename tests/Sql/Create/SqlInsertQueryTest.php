@@ -140,21 +140,22 @@ class SqlInsertQueryTest extends TestCase
 
         $statementMock = $this->createMock(PDOStatement::class);
 
-        $statementMock->expects($this->exactly(6))
+        $statementMock->expects($this->exactly(8))
             ->method("bindValue")
             ->withConsecutive(
                 [1, 101, PDO::PARAM_INT], [2, 102, PDO::PARAM_INT],
                 [1, 201, PDO::PARAM_INT], [2, 202, PDO::PARAM_INT],
-                [1, 301, PDO::PARAM_INT], [2, 302, PDO::PARAM_INT]
+                [1, 301, PDO::PARAM_INT], [2, 302, PDO::PARAM_INT],
+                [1, 401, PDO::PARAM_INT], [2, 402, PDO::PARAM_INT]
             );
 
-        $statementMock->expects($this->exactly(3))
+        $statementMock->expects($this->exactly(4))
             ->method("execute")
             ->willReturn(true);
 
-        $statementMock->expects($this->exactly(3))
+        $statementMock->expects($this->exactly(4))
             ->method("rowCount")
-            ->willReturnOnConsecutiveCalls(1, 1, 1);
+            ->willReturnOnConsecutiveCalls(1, 1, 1, 1);
 
         $this->pdoMock->expects($this->once())
             ->method("prepare")
@@ -171,6 +172,11 @@ class SqlInsertQueryTest extends TestCase
         $insert->persist(); // not saving anything
 
         $this->assertEquals(3, $insert->getInsertedRowCount());
+
+        $insert->stack(SimpleTable::getDTO(401, 402));
+
+        $this->assertEquals(1, $insert->getInsertedRowCount());
+        $insert->persist(); // not saving anything
     }
 
     public function testEmptyInsert(): void {

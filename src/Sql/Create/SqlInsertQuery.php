@@ -49,6 +49,7 @@ class SqlInsertQuery extends SqlQuery {
     /** @var ?\Closure(T): list<null|scalar> $valueMapper */
     private mixed $valueMapper = null;
 
+    private bool $clearInserted = false;
     private int $insertedId = 0;
     private int $insertedRowCount = 0;
 
@@ -101,6 +102,12 @@ class SqlInsertQuery extends SqlQuery {
             throw new \LogicException("Can't store object with INSERT SELECT query");
         }
 
+        if ($this->clearInserted) {
+            $this->insertedId = 0;
+            $this->insertedRowCount = 0;
+            $this->clearInserted = false;
+        }
+
         if (is_null($this->valueMapper)) {
             $this->valueMapper = ValueMapper::getObjectValueMapper($this->columns, $obj);
         }
@@ -111,7 +118,7 @@ class SqlInsertQuery extends SqlQuery {
         $this->currentStacked++;
 
         if ($this->stackSize > 0 && $this->currentStacked >= $this->stackSize) {
-            $this->persist();
+            $this->executePersist();
         }
         return $this;
     }
@@ -166,14 +173,13 @@ class SqlInsertQuery extends SqlQuery {
 
     /**
      * @param null|T|array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $objOrParams
-     * @return static
      * @throws InvalidParamTypeException
      * @throws SqlException
      * @throws \ReflectionException
      */
-    final public function persist(null|object|array $objOrParams=null): static {
+    private function executePersist(null|object|array $objOrParams=null): void {
         if (is_null($this->selectQuery) && count($this->values) == 0 && is_null($objOrParams)) {
-            return $this;
+            return;
         }
 
         $params = [];
@@ -203,7 +209,18 @@ class SqlInsertQuery extends SqlQuery {
             throw $e;
         }
         $this->clear();
+    }
 
+    /**
+     * @param null|T|array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $objOrParams
+     * @return static
+     * @throws InvalidParamTypeException
+     * @throws SqlException
+     * @throws \ReflectionException
+     */
+    final public function persist(null|object|array $objOrParams=null): static {
+        $this->executePersist($objOrParams);
+        $this->clearInserted = true;
         return $this;
     }
 

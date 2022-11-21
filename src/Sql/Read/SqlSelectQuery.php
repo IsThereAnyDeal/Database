@@ -124,7 +124,7 @@ class SqlSelectQuery extends SqlQuery {
 
     /**
      * @param ?array<string, null|scalar|BackedEnum|list<null|scalar|BackedEnum>> $params
-     * @return array<scalar>
+     * @return list<scalar>
      * @throws SqlException
      */
     final public function fetchValueArray(?array $params=null): array {
