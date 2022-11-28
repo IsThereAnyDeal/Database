@@ -164,14 +164,19 @@ class ObjectBuilder
                     if ($cp->property->getType() instanceof \ReflectionNamedType) {
                         /** @var \ReflectionNamedType $type */
                         $type = $cp->property->getType();
+                        $typeName = $type->getName();
 
-                        if (is_subclass_of($type->getName(), \BackedEnum::class)) {
-                            $typeName = $type->getName();
-
+                        if (is_subclass_of($typeName, \BackedEnum::class)) {
                             if ($type->allowsNull()) {
                                 $setter = fn(object $o) => ($typeName)::tryFrom($o->{$dbColumn});
                             } else {
                                 $setter = fn(object $o) => ($typeName)::from($o->{$dbColumn});
+                            }
+                        } elseif (class_exists($typeName)) {
+                            if ($type->allowsNull()) {
+                                $setter = fn(object $o) => is_null($o->{$dbColumn}) ? null : new ($typeName)($o->{$dbColumn});
+                            } else {
+                                $setter = fn(object $o) => new ($typeName)($o->{$dbColumn});
                             }
                         }
                     }

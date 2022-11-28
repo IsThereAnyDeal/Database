@@ -121,7 +121,21 @@ class ValueMapper
                 if (is_array($name)) {
                     throw new InvalidSerializerException("Missing serializer for multi-column property");
                 } else {
-                    $getters[] = fn(object $obj) => [$name => $prop->getValue($obj)];
+                    $propType = null;
+                    if ($prop->getType() instanceof \ReflectionNamedType) {
+                        $propType = $prop->getType()->getName();
+                    }
+
+                    if (!is_null($propType) && class_exists($propType) && !is_subclass_of($propType, BackedEnum::class)) {
+                        $class = new ReflectionClass($propType);
+                        if ($class->implementsInterface(\Stringable::class)) {
+                            $getters[] = fn(object $obj) => [$name => (string)$prop->getValue($obj)]; // @phpstan-ignore-line
+                        } else {
+                            throw new InvalidSerializerException("Missing serializer for object property");
+                        }
+                    } else {
+                        $getters[] = fn(object $obj) => [$name => $prop->getValue($obj)];
+                    }
                 }
             }
         }

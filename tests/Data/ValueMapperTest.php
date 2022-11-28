@@ -10,6 +10,7 @@ use IsThereAnyDeal\Database\Exceptions\MissingDataException;
 use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EInt;
 use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EString;
 use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EUnit;
+use IsThereAnyDeal\Database\Tests\_testObjects\Values\Currency;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -190,5 +191,26 @@ class ValueMapperTest extends TestCase
 
         $values = call_user_func($mapper, $obj);
         $this->assertEquals(["abc", null, null, null], $values);
+    }
+
+    public function testStringableObjects(): void {
+        $usd = new Currency("USD");
+        $eur = new Currency("EUR");
+        $obj = new class($usd, $eur) {
+            private Currency $currency1;
+            private Currency $currency2;
+            private ?Currency $currency3 = null;
+
+            public function __construct(Currency $currency1, Currency $currency2) {
+                $this->currency1 = $currency1;
+                $this->currency2 = $currency2;
+            }
+        };
+
+        $columns = new Set(["currency1", "currency3", "currency2"]);
+        $mapper = ValueMapper::getObjectValueMapper($columns, $obj);
+
+        $values = call_user_func($mapper, $obj);
+        $this->assertEquals(["USD", null, "EUR"], $values);
     }
 }

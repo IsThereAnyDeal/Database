@@ -282,4 +282,29 @@ class ObjectBuilderTest extends TestCase
         $this->assertEquals("Title A", $item->getTitle());
         $this->assertEquals(100, $item->getTimestamp());
     }
+
+    public function testConstructableObject(): void {
+        $data = new \ArrayIterator([
+            (object)["currency" => "EUR"],
+            (object)["currency" => "CAD"],
+            (object)["currency" => null],
+        ]);
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(SimpleDTO::class, $data);
+
+        $item = $items->current();
+        $this->assertInstanceOf(Currency::class, $item->currency);
+        $this->assertEquals("EUR", (string)$item->currency);
+        $items->next();
+
+        $item = $items->current();
+        $this->assertInstanceOf(Currency::class, $item->currency);
+        $this->assertEquals("CAD", (string)$item->currency);
+        $items->next();
+
+        $item = $items->current();
+        $this->assertNull($item->currency);
+        $items->next();
+    }
 }
