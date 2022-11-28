@@ -66,7 +66,7 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template TMapped
      * @param null|callable(T): TMapped $mapper
-     * @return array<($mapper is null ? T : TMapped)>
+     * @return ($mapper is null ? list<T> : list<TMapped>)
      * @throws ResultsClosedException
      */
     public function toArray(?callable $mapper=null): array {
