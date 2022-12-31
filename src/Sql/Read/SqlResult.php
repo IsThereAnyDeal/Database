@@ -7,7 +7,7 @@ use IteratorAggregate;
 use Traversable;
 
 /**
- * @template T of object
+ * @template T
  * @implements IteratorAggregate<T>
  */
 class SqlResult implements IteratorAggregate, Countable

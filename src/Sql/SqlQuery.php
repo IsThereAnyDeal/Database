@@ -84,7 +84,10 @@ abstract class SqlQuery {
 
         if ($profile) {
             $time = microtime(true) - $t;
-            $this->logger?->info($statement->queryString, ["execution" => $time]);
+            ob_start();
+            $statement->debugDumpParams();
+            $debug = ob_get_clean();
+            $this->logger?->info("{$time}s", ["query" => $debug]);
         }
     }
 
