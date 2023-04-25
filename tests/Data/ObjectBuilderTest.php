@@ -17,6 +17,7 @@ use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EType;
 use IsThereAnyDeal\Database\Tests\_testObjects\Serializers\SimpleSerializedDTO;
 use IsThereAnyDeal\Database\Tests\_testObjects\Values\Currency;
 use IsThereAnyDeal\Database\Tests\_testObjects\Values\SerializableList;
+use IsThereAnyDeal\Database\Tests\_testObjects\Values\StaticConstructible;
 use PHPUnit\Framework\TestCase;
 
 class ObjectBuilderTest extends TestCase
@@ -306,5 +307,18 @@ class ObjectBuilderTest extends TestCase
         $item = $items->current();
         $this->assertNull($item->currency);
         $items->next();
+    }
+
+    public function testNullableDeserializable(): void {
+
+        $data = new \ArrayIterator([
+            (object)["staticConstructible" => "TEST"]
+        ]);
+
+        $builder = new ObjectBuilder();
+        $items = $builder->build(ComplexSerializedDTO::class, $data);
+
+        $item = $items->current();
+        $this->assertInstanceOf(StaticConstructible::class, $item->staticConstructible);
     }
 }

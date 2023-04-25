@@ -138,7 +138,7 @@ class ObjectBuilder
 
                         $nullable = $cp->property->getType()?->allowsNull();
                         $setter = $nullable
-                            ? (fn(object $o) => is_null($o->{$dbColumn}) ? null : $valueSetter)
+                            ? (fn(object $o) => is_null($o->{$dbColumn}) ? null : $valueSetter($o))
                             : $valueSetter;
                     } elseif (is_array($cp->deserializer) && count($cp->deserializer) == 2) {
                         list($className, $method) = $cp->deserializer;

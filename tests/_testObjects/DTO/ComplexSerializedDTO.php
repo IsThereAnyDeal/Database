@@ -9,6 +9,7 @@ use IsThereAnyDeal\Database\Tests\_testObjects\Enum\EString;
 use IsThereAnyDeal\Database\Tests\_testObjects\Values\Currency;
 use IsThereAnyDeal\Database\Tests\_testObjects\Values\Price;
 use IsThereAnyDeal\Database\Tests\_testObjects\Serializers\PriceSerializer;
+use IsThereAnyDeal\Database\Tests\_testObjects\Values\StaticConstructible;
 
 #[Construction(EConstructionType::AfterFetch)]
 class ComplexSerializedDTO
@@ -26,6 +27,9 @@ class ComplexSerializedDTO
 
     public EString $enum;
     public ?ESize $nullableEnum;
+
+    #[Column(serializer: [StaticConstructible::class, "getValue"], deserializer: [StaticConstructible::class, "get"])]
+    public ?StaticConstructible $staticConstructible;
 
     public function __construct(?int $customRate = null, ?Currency $currency = null) {
         if (!is_null($customRate)) {
