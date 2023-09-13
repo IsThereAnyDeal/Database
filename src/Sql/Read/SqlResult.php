@@ -65,7 +65,7 @@ class SqlResult implements IteratorAggregate, Countable
 
     /**
      * @template TMapped
-     * @param null|callable(T): TMapped $mapper
+     * @param null|callable(T): TMapped|Closure(\stdClass): TMapped $mapper
      * @return ($mapper is null ? list<T> : list<TMapped>)
      * @throws ResultsClosedException
      */
@@ -111,7 +111,7 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template TKey of array-key
      * @template TValue
-     * @param callable(T): array{TKey,TValue} $mapper
+     * @param callable(T): array{TKey,TValue}|\Closure(\stdClass): array{TKey,TValue} $mapper
      * @return array<TKey, array<TValue>>
      * @throws ResultsClosedException
      */
@@ -135,7 +135,7 @@ class SqlResult implements IteratorAggregate, Countable
 
     /**
      * @template TMapped
-     * @param null|callable(T): TMapped $mapper
+     * @param null|callable(T): TMapped|\Closure(\stdClass): TMapped $mapper
      * @return Traversable<($mapper is null ? null|T : TMapped)>
      * @throws ResultsClosedException
      */
