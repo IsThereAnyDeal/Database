@@ -2,7 +2,6 @@
 namespace IsThereAnyDeal\Database\Attributes;
 
 use Attribute;
-use BackedEnum;
 use IsThereAnyDeal\Database\Exceptions\InvalidDeserializerException;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
@@ -10,8 +9,8 @@ class Column
 {
     /**
      * @param null|string|string[] $name
-     * @param null|string|(callable(object): null|scalar|BackedEnum|list<null|scalar|BackedEnum>) $serializer
-     * @param null|(callable(null|scalar ...): ?object) $deserializer
+     * @param null|callable $serializer
+     * @param null|callable $deserializer
      * @throws InvalidDeserializerException
      */
     public function __construct(
