@@ -9,8 +9,8 @@ class Column
 {
     /**
      * @param null|string|string[] $name
-     * @param null|callable $serializer
-     * @param null|callable $deserializer
+     * @param null|callable|array{class-string, string} $serializer
+     * @param null|callable|array{class-string, string} $deserializer
      * @throws InvalidDeserializerException
      */
     public function __construct(
