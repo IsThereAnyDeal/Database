@@ -56,8 +56,9 @@ class DbDriver
         return $this->db->inTransaction();
     }
 
-    public function setIsolationLevel(EInnoDbIsolationLevel $isolationLevel): void {
-        $this->db->query("SET TRANSACTION ISOLATION LEVEL ".$isolationLevel->value);
+    public function setSessionIsolationLevel(EInnoDbIsolationLevel $isolationLevel): void {
+        $this->db->query("SET SESSION TRANSACTION ISOLATION LEVEL ".$isolationLevel->value)
+            ->execute();
     }
 
     public function isProfile(): bool {
