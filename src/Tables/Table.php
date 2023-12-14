@@ -10,8 +10,8 @@ use ReflectionProperty;
 
 abstract class Table
 {
-    private readonly string $tbl_name;
-    private readonly string $tbl_alias;
+    public readonly string $__name__;
+    public readonly string $__alias__;
 
     public function __construct() {
         $reflection = new ReflectionClass($this);
@@ -20,8 +20,8 @@ abstract class Table
             throw new InvalidSetupException();
         }
 
-        $this->tbl_name = $tableName[0]->newInstance()->name;
-        $this->tbl_alias = AliasFactory::getAlias();
+        $this->__name__ = $tableName[0]->newInstance()->name;
+        $this->__alias__ = AliasFactory::getAlias();
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             $type = $property->getType();
@@ -38,7 +38,7 @@ abstract class Table
 
                     $property->setValue(
                         $this,
-                        new Column($this->tbl_alias, $columnName ?? $propertyName)
+                        new Column($this->__alias__, $columnName ?? $propertyName)
                     );
                 }
             }
@@ -46,7 +46,7 @@ abstract class Table
     }
 
     public function getName(): string {
-        return $this->tbl_name;
+        return $this->__name__;
     }
 
     private function isColumnType(string $typeName): bool {
@@ -62,7 +62,7 @@ abstract class Table
     }
 
     final public function __toString(): string {
-        return "`{$this->tbl_name}`"
-            .(empty($this->tbl_alias) ? "" : " as `{$this->tbl_alias}`");
+        return "`{$this->__name__}`"
+            .(empty($this->__alias__) ? "" : " as `{$this->__alias__}`");
     }
 }

@@ -168,7 +168,7 @@ class SqlInsertQuery extends SqlQuery {
             $this->values->push(...$parser->getValues());
         }
 
-        return "{$action}{$ignore} INTO `{$this->table->getName()}` ({$columns})\n{$valuesSql}{$update}";
+        return "{$action}{$ignore} INTO `{$this->table->__name__}` ({$columns})\n{$valuesSql}{$update}";
     }
 
     /**

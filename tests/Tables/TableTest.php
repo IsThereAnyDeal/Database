@@ -17,7 +17,7 @@ class TableTest extends TestCase
     public function testConstruction(): void {
 
         $a1 = new TableA();
-        $this->assertEquals("tbl_a", $a1->getName());
+        $this->assertEquals("tbl_a", $a1->__name__);
         $this->assertEquals("t1.`column1`", (string)$a1->a);
         $this->assertEquals("t1.`column1`", $a1->a->fqn);
         $this->assertEquals("column1", $a1->a->name);
