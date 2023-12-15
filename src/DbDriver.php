@@ -10,14 +10,13 @@ use IsThereAnyDeal\Database\Sql\Read\SqlSelectQuery;
 use IsThereAnyDeal\Database\Sql\Update\SqlUpdateObjectQuery;
 use IsThereAnyDeal\Database\Sql\Update\SqlUpdateQuery;
 use IsThereAnyDeal\Database\Tables\Table;
-use Psr\Log\LoggerInterface;
+use IsThereAnyDeal\Interfaces\Profiling\ProfilerInterface;
 
 class DbDriver
 {
     private readonly \PDO $db;
     private readonly ObjectBuilder $objectBuilder;
-    private ?LoggerInterface $logger = null;
-    private bool $profile = false;
+    private ?ProfilerInterface $profiler = null;
 
     public function __construct(\PDO $db) {
         $this->db = $db;
@@ -32,12 +31,13 @@ class DbDriver
         return $this->objectBuilder;
     }
 
-    public function getLogger(): ?LoggerInterface {
-        return $this->logger;
+    public function getProfiler(): ?ProfilerInterface {
+        return $this->profiler;
     }
 
-    public function setLogger(?LoggerInterface $logger): void {
-        $this->logger = $logger;
+    public function setProfiler(?ProfilerInterface $profiler): self {
+        $this->profiler = $profiler;
+        return $this;
     }
 
     public function begin(): bool {
@@ -59,15 +59,6 @@ class DbDriver
     public function setSessionIsolationLevel(EInnoDbIsolationLevel $isolationLevel): void {
         $this->db->query("SET SESSION TRANSACTION ISOLATION LEVEL ".$isolationLevel->value)
             ->execute();
-    }
-
-    public function isProfile(): bool {
-        return $this->profile;
-    }
-
-    public function setProfile(bool $profile): self {
-        $this->profile = $profile;
-        return $this;
     }
 
     public function select(string $query): SqlSelectQuery {

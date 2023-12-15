@@ -5,9 +5,9 @@ use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
 use IsThereAnyDeal\Database\Exceptions\InvalidQueryException;
 use IsThereAnyDeal\Database\Exceptions\SqlException;
+use IsThereAnyDeal\Interfaces\Profiling\ProfilerInterface;
 use PDO;
 use PDOStatement;
-use Psr\Log\LoggerInterface;
 
 abstract class SqlQuery {
 
@@ -15,17 +15,14 @@ abstract class SqlQuery {
     private readonly \PDO $db;
 
     private PDOStatement $statement;
-    private string $queryHash = "";
+    private string $query = "";
 
-    private bool $profile;
-    private ?LoggerInterface $logger;
-
+    private ?ProfilerInterface $profiler;
 
     public function __construct(DbDriver $db) {
         $this->driver = $db;
         $this->db = $db->getDriver();
-        $this->profile = $db->isProfile();
-        $this->logger = $db->getLogger();
+        $this->profiler = $db->getProfiler();
     }
 
     protected function checkQueryStartsWith(string $query, string $keyword): void {
@@ -36,7 +33,7 @@ abstract class SqlQuery {
 
     /**
      * @param string $query
-     * @param list<null|scalar> $values
+     * @param array<null|scalar> $values
      * @return PDOStatement
      * @throws InvalidParamTypeException
      */
@@ -46,10 +43,9 @@ abstract class SqlQuery {
          * Prepare new query if param counts changes,
          * otherwise we can use already prepared query
          */
-        $queryHash = md5($query, true);
-        if ($queryHash != $this->queryHash) {
+        if ($query != $this->query) {
             $this->statement = $this->db->prepare($query);
-            $this->queryHash = $queryHash;
+            $this->query = $query;
         }
 
         $i = 1;
@@ -59,7 +55,7 @@ abstract class SqlQuery {
                 "integer" => PDO::PARAM_INT,
                 "double",
                 "string" => PDO::PARAM_STR,
-                "NULL" => PDO::PARAM_NULL,
+                "NULL" => PDO::PARAM_NULL, // @phpstan-ignore-line
                 default => throw new InvalidParamTypeException()
             };
             $this->statement->bindValue($i++, $value, $type);
@@ -72,9 +68,17 @@ abstract class SqlQuery {
      * @throws SqlException
      */
     protected function execute(PDOStatement $statement): void {
-        $profile = $this->profile && !is_null($this->logger);
-        if ($profile) {
-            $t = microtime(true);
+
+        $span = null;
+        if (!is_null($this->profiler)) {
+            $query = preg_replace("#\((?:\?\s*,\s*)+\?\)#", "(?...)", $statement->queryString);
+
+            $span = $this->profiler
+                ->createContext()
+                ->setOp("db.query")
+                ->setDescription($query)
+                ->setData(["db.system" => "mysql"])
+                ->start();
         }
 
         if (!$statement->execute()) {
@@ -82,12 +86,8 @@ abstract class SqlQuery {
             throw new SqlException($errorInfo[0].": ".$errorInfo[2]);
         }
 
-        if ($profile) {
-            $time = microtime(true) - $t;
-            ob_start();
-            $statement->debugDumpParams();
-            $debug = ob_get_clean();
-            $this->logger?->info("{$time}s", ["query" => $debug]);
+        if (!is_null($span)) {
+            $this->profiler?->finish($span);
         }
     }
 

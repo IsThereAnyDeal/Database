@@ -36,7 +36,6 @@ class DbFactory {
                 $username,
                 $config->getPassword()
             ));
-            $inst->connections[$username]->setProfile($config->isProfile());
         }
 
         return $inst->connections[$username];

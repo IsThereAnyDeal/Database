@@ -20,7 +20,6 @@ final class DbConfig
             "user" => Expect::string()->required(),
             "user_custom" => Expect::bool(false),
             "user_prefix" => Expect::string(),
-            "profiler" => Expect::bool(false),
         ]);
     }
 
@@ -34,7 +33,6 @@ final class DbConfig
      *     user: string,
      *     user_custom: bool,
      *     user_prefix: string,
-     *     profiler: bool
      * } $config
      * */
     public function __construct(array $config) {
@@ -73,9 +71,5 @@ final class DbConfig
 
     public function getUserPrefix(): string {
         return $this->config->user_prefix; // @phpstan-ignore-line
-    }
-
-    public function isProfile(): bool {
-        return $this->config->profiler; // @phpstan-ignore-line
     }
 }
