@@ -227,8 +227,8 @@ class ObjectBuilder
             foreach($recipe as $item) {
                 $item->property->setValue($instance,
                     is_string($item->setter)
-                    ? $row->{$item->setter}
-                    : call_user_func($item->setter, $row));
+                        ? $row->{$item->setter}
+                        : call_user_func($item->setter, $row));
             }
 
             if ($constructionType == EConstructionType::AfterFetch) {

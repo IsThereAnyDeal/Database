@@ -28,7 +28,7 @@ class SqlResult implements IteratorAggregate, Countable
     /**
      * @template TMapped
      * @param T $data
-     * @param null|callable(T): TMapped $mapper
+     * @param null|callable(T): TMapped|callable(\stdClass): TMapped $mapper
      * @return ($mapper is null ? T : TMapped)
      */
     private function getMappedValue(mixed $data, ?callable $mapper=null): mixed {
@@ -46,7 +46,7 @@ class SqlResult implements IteratorAggregate, Countable
 
     /**
      * @template TMapped
-     * @param null|callable(T): TMapped $mapper
+     * @param null|callable(T): TMapped|callable(\stdClass): TMapped $mapper
      * @return null|($mapper is null ? T : TMapped)
      * @throws ResultsClosedException
      */
@@ -65,11 +65,11 @@ class SqlResult implements IteratorAggregate, Countable
 
     /**
      * @template TMapped
-     * @param null|callable(T): TMapped|Closure(\stdClass): TMapped $mapper
+     * @param null|callable(T): TMapped|callable(\stdClass): TMapped $mapper
      * @return ($mapper is null ? list<T> : list<TMapped>)
      * @throws ResultsClosedException
      */
-    public function toArray(?callable $mapper=null): array {
+    public function toArray(callable $mapper=null): array {
         if (is_null($this->data)) {
             throw new ResultsClosedException();
         }
@@ -101,7 +101,7 @@ class SqlResult implements IteratorAggregate, Countable
              * @var TKey $k
              * @var TValue $v
              */
-            list($k, $v) = call_user_func($mapper, $value); // @phpstan-ignore-line
+            list($k, $v) = call_user_func($mapper, $value);
             $result[$k] = $v;
         }
         $this->close();
@@ -126,7 +126,7 @@ class SqlResult implements IteratorAggregate, Countable
              * @var TKey $k
              * @var TValue $v
              */
-            list($k, $v) = call_user_func($mapper, $value); // @phpstan-ignore-line
+            list($k, $v) = call_user_func($mapper, $value);
             $result[$k][] = $v;
         }
         $this->close();
@@ -135,7 +135,7 @@ class SqlResult implements IteratorAggregate, Countable
 
     /**
      * @template TMapped
-     * @param null|callable(T): TMapped|\Closure(\stdClass): TMapped $mapper
+     * @param null|callable(T|\stdClass): TMapped $mapper
      * @return Traversable<($mapper is null ? null|T : TMapped)>
      * @throws ResultsClosedException
      */
@@ -167,6 +167,7 @@ class SqlResult implements IteratorAggregate, Countable
         $this->close();
     }
 
+    /** @return int<0, max> */
     public function count(): int {
         return $this->count;
     }

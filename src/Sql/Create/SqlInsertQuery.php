@@ -162,7 +162,7 @@ class SqlInsertQuery extends SqlQuery {
             $values = $valueListTemplate.str_repeat(",\n{$valueListTemplate}", $this->currentStacked-1);
             $valuesSql = "VALUES {$values}";
         } else {
-            $parser = new ParamParser(preg_replace("#^SELECT\s+#i", "", $this->selectQuery), $params);
+            $parser = new ParamParser(preg_replace("#^SELECT\s+#i", "", $this->selectQuery), $params); // @phpstan-ignore-line
             $valuesSql = "SELECT ".$parser->getQuery();
             $this->values->clear();
             $this->values->push(...$parser->getValues());

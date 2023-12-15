@@ -137,10 +137,11 @@ class SqlSelectQuery extends SqlQuery {
         $this->execute($statement);
 
         $result = [];
+        /** @var array<scalar> $a */
         foreach($statement as $a) {
             $result[] = $a[0];
         }
-        /** @var array<scalar> $result */
+        $statement->closeCursor();
         return $result;
     }
 

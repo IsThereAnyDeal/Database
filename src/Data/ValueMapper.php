@@ -53,7 +53,7 @@ class ValueMapper
                 $column = $attribute->newInstance();
             }
 
-            $name = $column?->name ?? $prop->getName();
+            $name = $column->name ?? $prop->getName();
             $serializer = $column?->serializer;
 
             if (is_array($name)) {
@@ -107,7 +107,7 @@ class ValueMapper
                         if (is_array($name)) {
                             return is_null($value)
                                 ? array_combine($name, array_fill(0, count($name), null))
-                                : array_combine($name, $serializer($value)); // @phpstan-ignore-line
+                                : array_combine($name, $serializer($value));
                         } else {
                             return [
                                 $name => is_null($value)
