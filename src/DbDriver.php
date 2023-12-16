@@ -11,12 +11,15 @@ use IsThereAnyDeal\Database\Sql\Update\SqlUpdateObjectQuery;
 use IsThereAnyDeal\Database\Sql\Update\SqlUpdateQuery;
 use IsThereAnyDeal\Database\Tables\Table;
 use IsThereAnyDeal\Interfaces\Profiling\ProfilerInterface;
+use Psr\Log\LoggerInterface;
 
 class DbDriver
 {
     private readonly \PDO $db;
     private readonly ObjectBuilder $objectBuilder;
+
     private ?ProfilerInterface $profiler = null;
+    private ?LoggerInterface $queryLogger = null;
 
     public function __construct(\PDO $db) {
         $this->db = $db;
@@ -37,6 +40,15 @@ class DbDriver
 
     public function setProfiler(?ProfilerInterface $profiler): self {
         $this->profiler = $profiler;
+        return $this;
+    }
+
+    public function getQueryLogger(): ?LoggerInterface {
+        return $this->queryLogger;
+    }
+
+    public function setQueryLogger(?LoggerInterface $queryLogger): self {
+        $this->queryLogger = $queryLogger;
         return $this;
     }
 

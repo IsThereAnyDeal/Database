@@ -8,6 +8,7 @@ use IsThereAnyDeal\Database\Exceptions\SqlException;
 use IsThereAnyDeal\Interfaces\Profiling\ProfilerInterface;
 use PDO;
 use PDOStatement;
+use Psr\Log\LoggerInterface;
 
 abstract class SqlQuery {
 
@@ -17,12 +18,14 @@ abstract class SqlQuery {
     private PDOStatement $statement;
     private string $query = "";
 
-    private ?ProfilerInterface $profiler;
+    private readonly ?ProfilerInterface $profiler;
+    private readonly ?LoggerInterface $queryLogger;
 
     public function __construct(DbDriver $db) {
         $this->driver = $db;
         $this->db = $db->getDriver();
         $this->profiler = $db->getProfiler();
+        $this->queryLogger = $db->getQueryLogger();
     }
 
     protected function checkQueryStartsWith(string $query, string $keyword): void {
@@ -88,6 +91,16 @@ abstract class SqlQuery {
 
         if (!is_null($span)) {
             $this->profiler?->finish($span);
+        }
+
+        if (!is_null($this->queryLogger)) {
+            ob_start();
+            $statement->debugDumpParams();
+            $debug = ob_get_clean();
+            if ($debug !== false && preg_match("#Sent SQL: \[\d+] (.+)?\\nParams#s", $debug, $m)) {
+                $sentSql = preg_replace("#\r#", "", $m[1]);
+                $this->queryLogger->debug("", ["dump" => $sentSql]);
+            }
         }
     }
 
