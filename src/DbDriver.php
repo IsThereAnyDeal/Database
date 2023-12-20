@@ -6,6 +6,7 @@ use IsThereAnyDeal\Database\Enums\EInnoDbIsolationLevel;
 use IsThereAnyDeal\Database\Sql\Create\SqlInsertQuery;
 use IsThereAnyDeal\Database\Sql\Create\SqlReplaceQuery;
 use IsThereAnyDeal\Database\Sql\Delete\SqlDeleteQuery;
+use IsThereAnyDeal\Database\Sql\Raw\SqlRawQuery;
 use IsThereAnyDeal\Database\Sql\Read\SqlSelectQuery;
 use IsThereAnyDeal\Database\Sql\Update\SqlUpdateObjectQuery;
 use IsThereAnyDeal\Database\Sql\Update\SqlUpdateQuery;
@@ -103,5 +104,9 @@ class DbDriver
 
     public function delete(string $query): SqlDeleteQuery {
         return new SqlDeleteQuery($this, $query);
+    }
+
+    public function raw(string $query): SqlRawQuery {
+        return new SqlRawQuery($this, $query);
     }
 }
