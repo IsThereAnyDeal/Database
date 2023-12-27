@@ -4,6 +4,7 @@ namespace IsThereAnyDeal\Database\Sql\Read;
 use BackedEnum;
 use IsThereAnyDeal\Database\DbDriver;
 use IsThereAnyDeal\Database\Exceptions\InvalidParamTypeException;
+use IsThereAnyDeal\Database\Exceptions\InvalidQueryException;
 use IsThereAnyDeal\Database\Exceptions\InvalidValueTypeException;
 use IsThereAnyDeal\Database\Exceptions\MissingParameterException;
 use IsThereAnyDeal\Database\Exceptions\SqlException;
@@ -20,7 +21,9 @@ class SqlSelectQuery extends SqlQuery {
     private array $values = [];
 
     public function __construct(DbDriver $db, string $query) {
-        $this->checkQueryStartsWith($query, "SELECT");
+        if (!preg_match("#^[\s(]*SELECT\s#i", $query)) {
+            throw new InvalidQueryException();
+        }
         parent::__construct($db);
 
         $this->userQuery = $query;
