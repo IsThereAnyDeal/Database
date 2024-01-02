@@ -30,14 +30,15 @@ class DbFactory {
             ? $config->getUser()
             : $config->getUserPrefix().$user;
 
-        if (!isset($inst->connections[$username])) {
-            $inst->connections[$username] = new DbDriver(new PDO(
-                "mysql:host=".$config->getHost().";port=".$config->getPort().";dbname=".$config->getDatabase(),
+        $dsn = "mysql:host=".$config->getHost().";port=".$config->getPort().";dbname=".$config->getDatabase();
+        if (!isset($inst->connections[$dsn])) {
+            $inst->connections[$dsn] = new DbDriver(new PDO(
+                $dsn,
                 $username,
                 $config->getPassword()
             ));
         }
 
-        return $inst->connections[$username];
+        return $inst->connections[$dsn];
     }
 }
