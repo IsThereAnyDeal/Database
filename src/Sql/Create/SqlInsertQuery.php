@@ -25,6 +25,9 @@ class SqlInsertQuery extends SqlQuery {
     /** @var Set<string> */
     private Set $columns;
 
+    private ?string $rowAlias = null;
+    private array $columnAliases = [];
+
     private ?string $selectQuery = null;
 
     /** @var array<string> */
@@ -66,6 +69,15 @@ class SqlInsertQuery extends SqlQuery {
 
     final public function columns(Column ...$columns): static {
         $this->columns = new Set(array_map(fn(Column $c) => $c->name, $columns));
+        return $this;
+    }
+
+    /**
+     * @param list<string> $columnAliases
+     */
+    final public function rowAlias(string $rowAlias, array $columnAliases=[]): static {
+        $this->rowAlias = $rowAlias;
+        $this->columnAliases = $columnAliases;
         return $this;
     }
 
@@ -168,7 +180,19 @@ class SqlInsertQuery extends SqlQuery {
             $this->values->push(...$parser->getValues());
         }
 
-        return "{$action}{$ignore} INTO `{$this->table->__name__}` ({$columns})\n{$valuesSql}{$update}";
+        $alias = "";
+        if (!is_null($this->rowAlias)) {
+            $alias = " AS {$this->rowAlias} ";
+            if (!empty($this->columnAliases)) {
+                if (count($this->columnAliases) != count($this->columns)) {
+                    throw new \InvalidArgumentException("Column count and column alias count doesn't match");
+                }
+
+                $alias .= "(".implode(",", $this->columnAliases).") ";
+            }
+        }
+
+        return "{$action}{$ignore} INTO `{$this->table->__name__}` ({$columns})\n{$valuesSql}{$alias}{$update}";
     }
 
     /**
