@@ -1,21 +1,29 @@
 <?php
 namespace IsThereAnyDeal\Database\Tables;
 
-final class Column
+final readonly class Column
 {
-    public readonly string $name;
-    public readonly string $fqn;
+    private Table $table;
+    public string $name;
+    public string $aliased;
 
-    public function __construct(string $table, string $name) {
+    public function __construct(Table $table, string $name) {
+        $this->table = $table;
         $this->name = $name;
-        $this->fqn = (empty($table) ? "`$name`" : "{$table}.`{$name}`");
+        $this->aliased = (empty($table->__alias__)
+            ? $this->fqn()
+            : "{$table->__alias__}.`{$name}`");
+    }
+
+    public function fqn(): string {
+        return "{$this->table->__name__}.`{$this->name}`";
     }
 
     public function as(string $alias): string {
-        return "{$this->fqn} as `{$alias}`";
+        return "{$this->fqn()} as `{$alias}`";
     }
 
     public function __toString(): string {
-        return $this->fqn;
+        return $this->aliased;
     }
 }

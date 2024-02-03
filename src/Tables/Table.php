@@ -38,7 +38,7 @@ abstract class Table
 
                     $property->setValue(
                         $this,
-                        new Column($this->__alias__, $columnName ?? $propertyName)
+                        new Column($this, $columnName ?? $propertyName)
                     );
                 }
             }
