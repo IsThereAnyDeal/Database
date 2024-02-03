@@ -1,5 +1,5 @@
 <?php
-namespace IsThereAnyDeal\Database\Tests\Sql\Read;
+namespace Sql;
 
 use IsThereAnyDeal\Database\Exceptions\ResultsClosedException;
 use IsThereAnyDeal\Database\Sql\Read\SqlResult;
