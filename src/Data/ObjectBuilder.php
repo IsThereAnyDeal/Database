@@ -168,7 +168,12 @@ class ObjectBuilder
 
                         if (is_subclass_of($typeName, \BackedEnum::class)) {
                             if ($type->allowsNull()) {
-                                $setter = fn(object $o) => ($typeName)::tryFrom($o->{$dbColumn});
+                                $setter = function(object $o) use($dbColumn, $typeName) {
+                                    $value = $o->{$dbColumn};
+                                    return is_null($value)
+                                        ? null
+                                        : ($typeName)::tryFrom($o->{$dbColumn});
+                                };
                             } else {
                                 $setter = fn(object $o) => ($typeName)::from($o->{$dbColumn});
                             }
