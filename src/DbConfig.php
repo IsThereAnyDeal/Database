@@ -8,6 +8,18 @@ use Nette\Schema\Schema;
 final class DbConfig
 {
 
+    /**
+     * @var object{
+     *     driver: string,
+     *     host: string,
+     *     port: int,
+     *     database: string,
+     *     credentials: array<string, object{
+     *         user: string,
+     *         password: string
+     *     }>
+     * } $config
+     */
     private object $config;
 
     private function getSchema(): Schema {
@@ -15,61 +27,44 @@ final class DbConfig
             "driver" => Expect::anyOf("mysqli")->required(),
             "host" => Expect::string("localhost")->required(),
             "port" => Expect::int()->required(),
-            "password" => Expect::string()->required()->before(fn($v) => base64_decode($v)),
             "database" => Expect::string()->required(),
-            "user" => Expect::string()->required(),
-            "user_custom" => Expect::bool(false),
-            "user_prefix" => Expect::string(),
+            "credentials" => Expect::arrayOf(
+                Expect::structure([
+                    "user" => Expect::string()->required(),
+                    "password" => Expect::string()->required()->before(fn($v) => base64_decode($v))
+                ]),
+                Expect::string()->required()
+            )
         ]);
     }
 
-    /**
-     * @param array{
-     *     driver: string,
-     *     host: string,
-     *     port: int,
-     *     password: string,
-     *     database: string,
-     *     user: string,
-     *     user_custom: bool,
-     *     user_prefix: string,
-     * } $config
-     * */
-    public function __construct(array $config) {
+    public function __construct(mixed $config) {
          // @phpstan-ignore-next-line
          $this->config = (new Processor())
             ->process($this->getSchema(), $config);
     }
 
     public function getDriver(): string {
-        return $this->config->driver; // @phpstan-ignore-line
+        return $this->config->driver;
     }
 
     public function getHost(): string {
-        return $this->config->host; // @phpstan-ignore-line
+        return $this->config->host;
     }
 
     public function getPort(): int {
-        return $this->config->port; // @phpstan-ignore-line
-    }
-
-    public function getPassword(): string {
-        return $this->config->password; // @phpstan-ignore-line
+        return $this->config->port;
     }
 
     public function getDatabase(): string {
-        return $this->config->database; // @phpstan-ignore-line
+        return $this->config->database;
     }
 
-    public function getUser(): string {
-        return $this->config->user; // @phpstan-ignore-line
-    }
-
-    public function useCustomUsers(): bool {
-        return $this->config->user_custom; // @phpstan-ignore-line
-    }
-
-    public function getUserPrefix(): string {
-        return $this->config->user_prefix; // @phpstan-ignore-line
+    public function getCredentials(string $key): Credentials {
+        if (!isset($this->config->credentials[$key])) {
+            throw new \InvalidArgumentException();
+        }
+        $credentials = $this->config->credentials[$key];
+        return new Credentials($credentials->user, $credentials->password);
     }
 }
