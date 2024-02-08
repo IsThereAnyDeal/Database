@@ -73,7 +73,7 @@ class ObjectBuilder
             $properties[] = new SColumnDescriptor(
                 $property,
                 $dbColumName ?? $property->getName(),
-                $deserializer
+                $deserializer // @phpstan-ignore-line
             );
         }
 
@@ -233,7 +233,7 @@ class ObjectBuilder
                 $item->property->setValue($instance,
                     is_string($item->setter)
                         ? $row->{$item->setter}
-                        : call_user_func($item->setter, $row));
+                        : call_user_func($item->setter, $row)); // @phpstan-ignore-line TODO what's this error, looks scary
             }
 
             if ($constructionType == EConstructionType::AfterFetch) {

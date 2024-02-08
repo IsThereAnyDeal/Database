@@ -61,7 +61,7 @@ class SqlSelectQuery extends SqlQuery {
             $data = new \EmptyIterator();
         } else {
             /** @var \Traversable<object> */
-            $data = $statement;
+            $data = $statement; // @phpstan-ignore-line
             if (!is_null($className)) {
                 $objectBuilder = $this->driver->getObjectBuilder();
                 $data = $objectBuilder->build($className, $data, $constructorArgs);

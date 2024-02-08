@@ -14,11 +14,13 @@ class SqlResult implements IteratorAggregate, Countable
 {
     /** @var ?Traversable<T> $data */
     private ?Traversable $data;
+
+    /** @var non-negative-int */
     private int $count;
 
     /**
      * @param Traversable<T> $data
-     * @param int $count
+     * @param non-negative-int $count
      */
     public function __construct(Traversable $data, int $count) {
         $this->data = $data;
@@ -167,7 +169,7 @@ class SqlResult implements IteratorAggregate, Countable
         $this->close();
     }
 
-    /** @return int<0, max> */
+    /** @return non-negative-int */
     public function count(): int {
         return $this->count;
     }

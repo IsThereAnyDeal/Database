@@ -70,8 +70,11 @@ class DbDriver
     }
 
     public function setSessionIsolationLevel(EInnoDbIsolationLevel $isolationLevel): void {
-        $this->db->query("SET SESSION TRANSACTION ISOLATION LEVEL ".$isolationLevel->value)
-            ->execute();
+        $query = $this->db->query("SET SESSION TRANSACTION ISOLATION LEVEL ".$isolationLevel->value);
+        if ($query === false) {
+            throw new \ErrorException();
+        }
+        $query->execute();
     }
 
     public function select(string $query): SqlSelectQuery {

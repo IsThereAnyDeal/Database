@@ -26,6 +26,8 @@ class SqlInsertQuery extends SqlQuery {
     private Set $columns;
 
     private ?string $rowAlias = null;
+
+    /** @var list<string> */
     private array $columnAliases = [];
 
     private ?string $selectQuery = null;
