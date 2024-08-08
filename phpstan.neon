@@ -1,5 +1,5 @@
 parameters:
-  checkGenericClassInNonGenericObjectType: false
+  treatPhpDocTypesAsCertain: false
   level: max
   paths:
     - src

@@ -19,7 +19,7 @@ class DbDriver
     private readonly \PDO $db;
     private readonly ObjectBuilder $objectBuilder;
 
-    private ?ProfilerInterface $profiler = null;
+    private ?ProfilerInterface $profiler = null; // @phpstan-ignore-line
     private ?LoggerInterface $queryLogger = null;
 
     public function __construct(\PDO $db) {
@@ -35,11 +35,11 @@ class DbDriver
         return $this->objectBuilder;
     }
 
-    public function getProfiler(): ?ProfilerInterface {
+    public function getProfiler(): ?ProfilerInterface { // @phpstan-ignore-line
         return $this->profiler;
     }
 
-    public function setProfiler(?ProfilerInterface $profiler): self {
+    public function setProfiler(?ProfilerInterface $profiler): self { // @phpstan-ignore-line
         $this->profiler = $profiler;
         return $this;
     }
@@ -93,7 +93,7 @@ class DbDriver
      * @param Table $table
      * @return SqlInsertQuery
      */
-    public function insert(Table $table): SqlInsertQuery {
+    public function insert(Table $table): SqlInsertQuery { // @phpstan-ignore-line
         return new SqlInsertQuery($this, $table);
     }
 

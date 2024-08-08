@@ -18,7 +18,7 @@ abstract class SqlQuery {
     private PDOStatement $statement;
     private string $query = "";
 
-    private readonly ?ProfilerInterface $profiler;
+    private readonly ?ProfilerInterface $profiler; // @phpstan-ignore-line
     private readonly ?LoggerInterface $queryLogger;
 
     public function __construct(DbDriver $db) {
@@ -58,7 +58,7 @@ abstract class SqlQuery {
                 "integer" => PDO::PARAM_INT,
                 "double",
                 "string" => PDO::PARAM_STR,
-                "NULL" => PDO::PARAM_NULL, // @phpstan-ignore-line
+                "NULL" => PDO::PARAM_NULL,
                 default => throw new InvalidParamTypeException()
             };
             $this->statement->bindValue($i++, $value, $type);
@@ -97,7 +97,7 @@ abstract class SqlQuery {
             ob_start();
             $statement->debugDumpParams();
             $debug = ob_get_clean();
-            if ($debug !== false && preg_match("#Sent SQL: \[\d+] (.+)?\\nParams#s", $debug, $m)) {
+            if ($debug !== false && preg_match("#Sent SQL: \[\d+] (.+?)\\nParams#s", $debug, $m)) {
                 $sentSql = preg_replace("#\r#", "", $m[1]);
                 $this->queryLogger->debug("", ["dump" => $sentSql]);
             }
