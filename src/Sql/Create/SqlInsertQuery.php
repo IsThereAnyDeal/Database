@@ -174,7 +174,7 @@ class SqlInsertQuery extends SqlQuery {
         if (is_null($this->selectQuery)) {
             $valueListTemplate = ValueMapper::getValueTemplate(count($this->columns));
             $values = $valueListTemplate.str_repeat(",\n{$valueListTemplate}", $this->currentStacked-1);
-            $valuesSql = "VALUES {$values} as `new`";
+            $valuesSql = "VALUES {$values}";
         } else {
             $parser = new ParamParser(preg_replace("#^SELECT\s+#i", "", $this->selectQuery), $params); // @phpstan-ignore-line
             $valuesSql = "SELECT ".$parser->getQuery();
