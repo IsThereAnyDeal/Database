@@ -71,7 +71,7 @@ class SqlResult implements IteratorAggregate, Countable
      * @return ($mapper is null ? list<T> : list<TMapped>)
      * @throws ResultsClosedException
      */
-    public function toArray(callable $mapper=null): array {
+    public function toArray(?callable $mapper=null): array {
         if (is_null($this->data)) {
             throw new ResultsClosedException();
         }
