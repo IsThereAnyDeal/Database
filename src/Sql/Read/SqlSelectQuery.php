@@ -21,7 +21,7 @@ class SqlSelectQuery extends SqlQuery {
     private array $values = [];
 
     public function __construct(DbDriver $db, string $query) {
-        if (!preg_match("#^[\s(]*SELECT\s#i", $query)) {
+        if (!preg_match("#^[\s(]*(SELECT|WITH)\s#i", $query)) {
             throw new InvalidQueryException();
         }
         parent::__construct($db);
