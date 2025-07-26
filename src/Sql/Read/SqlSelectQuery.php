@@ -44,7 +44,7 @@ class SqlSelectQuery extends SqlQuery {
     }
 
     /**
-     * @template T of object
+     * @template T of object = \stdClass
      * @param null|class-string<T>|T $className
      * @param mixed ...$constructorArgs
      * @return SqlResult<T>

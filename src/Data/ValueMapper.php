@@ -77,7 +77,7 @@ class ValueMapper
                         list($className, $method) = $serializer;
                         if ($prop->getType() instanceof \ReflectionNamedType
                          && $prop->getType()->getName() === $className
-                         && is_string($method)) // @phpstan-ignore-line // extra safety
+                         && is_string($method)) // extra safety
                         {
                             $getters[] = function(object $obj) use($name, $prop, $method) {
                                 $value = $prop->getValue($obj);

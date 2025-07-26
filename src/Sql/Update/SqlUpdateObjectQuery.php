@@ -109,7 +109,7 @@ class SqlUpdateObjectQuery extends SqlQuery {
     }
 
     final public function update(object $obj): int {
-        if (!isset($this->columns) || count($this->columns) == 0) {
+        if (count($this->columns) == 0) {
             throw new SqlException();
         }
 

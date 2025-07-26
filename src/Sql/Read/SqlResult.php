@@ -38,7 +38,7 @@ class SqlResult implements IteratorAggregate, Countable
             return $data;
         }
 
-        return call_user_func($mapper, $data);
+        return call_user_func($mapper, $data); // @phpstan-ignore-line
     }
 
     private function close(): void {
@@ -48,7 +48,8 @@ class SqlResult implements IteratorAggregate, Countable
 
     /**
      * @template TMapped
-     * @param null|callable(T): TMapped|callable(\stdClass): TMapped $mapper
+     * @template U
+     * @param null|callable(U): TMapped $mapper
      * @return null|($mapper is null ? T : TMapped)
      * @throws ResultsClosedException
      */
@@ -58,7 +59,7 @@ class SqlResult implements IteratorAggregate, Countable
         }
 
         foreach($this->data as $item) {
-            $result = $this->getMappedValue($item, $mapper);
+            $result = $this->getMappedValue($item, $mapper); // @phpstan-ignore-line
             $this->close();
             return $result;
         }
@@ -67,7 +68,8 @@ class SqlResult implements IteratorAggregate, Countable
 
     /**
      * @template TMapped
-     * @param null|callable(T): TMapped|callable(\stdClass): TMapped $mapper
+     * @template U
+     * @param null|callable(U): TMapped $mapper
      * @return ($mapper is null ? list<T> : list<TMapped>)
      * @throws ResultsClosedException
      */
@@ -76,10 +78,11 @@ class SqlResult implements IteratorAggregate, Countable
             throw new ResultsClosedException();
         }
 
+        /** @var list<TMapped> $result */
         $result = [];
         /** @var T $value */
         foreach($this->data as $value) {
-            $result[] = $this->getMappedValue($value, $mapper);
+            $result[] = $this->getMappedValue($value, $mapper); // @phpstan-ignore-line
         }
         $this->close();
         return $result;
