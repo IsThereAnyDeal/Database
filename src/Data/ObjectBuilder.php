@@ -140,7 +140,7 @@ class ObjectBuilder
                         $setter = $nullable
                             ? (fn(object $o) => is_null($o->{$dbColumn}) ? null : $valueSetter($o))
                             : $valueSetter;
-                    } elseif (is_array($cp->deserializer) && count($cp->deserializer) == 2) {
+                    } elseif (is_array($cp->deserializer) && count($cp->deserializer) == 2) { // @phpstan-ignore-line
                         list($className, $method) = $cp->deserializer;
 
                         if ($cp->property->getType() instanceof \ReflectionNamedType
