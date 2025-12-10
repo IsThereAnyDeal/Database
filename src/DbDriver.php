@@ -53,7 +53,14 @@ class DbDriver
         return $this;
     }
 
-    public function begin(): bool {
+    public function begin(?EInnoDbIsolationLevel $isolationLevel=null): bool {
+        if (!is_null($isolationLevel)) {
+            $query = $this->db->query("SET TRANSACTION ISOLATION LEVEL ".$isolationLevel->value);
+            if ($query === false) {
+                throw new \ErrorException();
+            }
+            $query->execute();
+        }
         return $this->db->beginTransaction();
     }
 
