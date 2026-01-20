@@ -2,6 +2,7 @@
 namespace IsThereAnyDeal\Database\Tests\Tables;
 
 use IsThereAnyDeal\Database\Tables\AliasFactory;
+use IsThereAnyDeal\Database\Tables\Context;
 use IsThereAnyDeal\Database\Tests\_testObjects\Tables\ProductTable;
 use IsThereAnyDeal\Database\Tests\_testObjects\Tables\TableA;
 use PHPUnit\Framework\TestCase;
@@ -37,5 +38,20 @@ class TableTest extends TestCase
 
         $b = new ProductTable();
         $this->assertEquals("`product` as `t3`", (string)$b);
+    }
+
+    public function testContext(): void {
+        $context = new Context();
+        $g_a1 = new TableA();
+        $c_a1 = new TableA($context);
+
+        $this->assertEquals("`tbl_a` as `t1`", (string)$g_a1);
+        $this->assertEquals("`tbl_a` as `t1`", (string)$c_a1);
+
+        $g_a2 = new TableA();
+        $c_a2 = new TableA($context);
+
+        $this->assertEquals("`tbl_a` as `t2`", (string)$g_a2);
+        $this->assertEquals("`tbl_a` as `t2`", (string)$c_a2);
     }
 }

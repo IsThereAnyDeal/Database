@@ -13,7 +13,7 @@ abstract class Table
     public readonly string $__name__;
     public readonly string $__alias__;
 
-    public function __construct() {
+    public function __construct(?Context $context=null) {
         $reflection = new ReflectionClass($this);
         $tableName = $reflection->getAttributes(TableName::class);
         if (count($tableName) != 1) {
@@ -21,7 +21,7 @@ abstract class Table
         }
 
         $this->__name__ = $tableName[0]->newInstance()->name;
-        $this->__alias__ = AliasFactory::getAlias();
+        $this->__alias__ = $context?->getAlias() ?? AliasFactory::getAlias();
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             $type = $property->getType();
