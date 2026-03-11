@@ -41,17 +41,17 @@ class TableTest extends TestCase
     }
 
     public function testContext(): void {
-        $context = new Context();
+        $context = new Context("a");
         $g_a1 = new TableA();
         $c_a1 = new TableA($context);
 
         $this->assertEquals("`tbl_a` as `t1`", (string)$g_a1);
-        $this->assertEquals("`tbl_a` as `t1`", (string)$c_a1);
+        $this->assertEquals("`tbl_a` as `a_`", (string)$c_a1);
 
         $g_a2 = new TableA();
         $c_a2 = new TableA($context);
 
         $this->assertEquals("`tbl_a` as `t2`", (string)$g_a2);
-        $this->assertEquals("`tbl_a` as `t2`", (string)$c_a2);
+        $this->assertEquals("`tbl_a` as `a2_`", (string)$c_a2);
     }
 }
