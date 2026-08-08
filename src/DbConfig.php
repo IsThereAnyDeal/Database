@@ -31,7 +31,7 @@ final class DbConfig
             "credentials" => Expect::arrayOf(
                 Expect::structure([
                     "user" => Expect::string()->required(),
-                    "password" => Expect::string()->required()->before(fn($v) => base64_decode($v))
+                    "password" => Expect::string()->required()->before(fn($v) => base64_decode($v)) // @phpstan-ignore-line
                 ]),
                 Expect::string()->required()
             )
